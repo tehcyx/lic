@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+
+	"github.com/tehcyx/lic/pkg/lic/core"
 )
 
 //Version contains the kyma-cli binary version injected by the build system

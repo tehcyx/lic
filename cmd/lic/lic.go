@@ -3,6 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
+
+	"github.com/tehcyx/lic/pkg/lic/cmd"
+	"github.com/tehcyx/lic/pkg/lic/core"
 )
 
 func main() {
