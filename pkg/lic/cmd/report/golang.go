@@ -22,7 +22,7 @@ func NewGolangReportCmd(o *ReportOptions) *cobra.Command {
 //Run runs the command
 func (o *ReportOptions) Run() error {
 
-	fmt.Println("Open all *.go files on current path, ")
+	fmt.Println("Check go.mod/go.sum")
 
 	return nil
 }
