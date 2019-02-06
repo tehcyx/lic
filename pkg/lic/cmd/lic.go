@@ -3,9 +3,9 @@ package cmd
 import (
 	"time"
 
-	"github.com/tehcyx/lic/pkg/cmd/report"
-	"github.com/tehcyx/lic/pkg/core"
 	"github.com/spf13/cobra"
+	"github.com/tehcyx/lic/pkg/lic/cmd/report"
+	"github.com/tehcyx/lic/pkg/lic/core"
 )
 
 const (
@@ -28,7 +28,7 @@ Find more information at: https://github.com/tehcyx/lic
 	versionCmd := NewVersionCmd(NewVersionOptions(o))
 	cmd.AddCommand(versionCmd)
 
-	reportCmd := NewReportCmd()
+	reportCmd := NewReportCmd(o)
 	cmd.AddCommand(reportCmd)
 
 	reportGolangCmd := report.NewReportGolangCmd(report.NewGolangReportOptions(o))

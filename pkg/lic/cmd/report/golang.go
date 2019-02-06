@@ -6,22 +6,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//GolangReportOptions defines available options for the command
-type GolangReportOptions struct {
-	*core.Options
-	Upload         bool
-	UploadEndpoint string
-	SrcPath        string
-	HTMLOutput     bool
-}
-
-//NewGolangReportOptions creates options with default values
-func NewGolangReportOptions(o *core.Options) *GolangReportOptions {
-	return &GolangReportOptions{Options: o}
-}
-
 //NewGolangReportCmd creates a new report command
-func NewGolangReportCmd(o *GolangReportOptions) *cobra.Command {
+func NewGolangReportCmd(o *ReportOptions) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "golang",
 		Short:   "Generates a report of current working directory",
@@ -34,7 +20,7 @@ func NewGolangReportCmd(o *GolangReportOptions) *cobra.Command {
 }
 
 //Run runs the command
-func (o *GolangReportOptions) Run() error {
+func (o *ReportOptions) Run() error {
 
 	fmt.Println("Open all *.go files on current path, ")
 
