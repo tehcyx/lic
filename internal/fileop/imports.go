@@ -8,6 +8,7 @@ import (
 	"regexp"
 )
 
+//ReadImports reads imports on a given filepath with the given regex params for start, end and line
 func ReadImports(filePath, importStart, importEnd, importInline string) ([]string, error) {
 	var imports []string
 
