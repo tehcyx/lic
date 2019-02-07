@@ -32,9 +32,10 @@ func ReadImports(filePath, importStart, importEnd, importInline string) ([]strin
 				if match, _ := regexp.MatchString(importEnd, lineText); match {
 					return imports, nil
 				} else {
-					re := regexp.MustCompile(importInline)
+					re := regexp.MustCompile(importInline) //TODO: this problably doesn't cover single line imports
 					stringMatch := re.FindStringSubmatch(lineText)
 					imports = append(imports, stringMatch[0])
+					continue
 				}
 			}
 		}

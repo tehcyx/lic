@@ -13,13 +13,19 @@ import (
 )
 
 const (
+	//GoModImportStart will cover the line in the go.mod file that starts indicating the libraries included: "required ("
 	GoModImportStart = "^require \\(.*"
-	GoModImportEnd   = "^\\).*"
-	GoModLineImport  = "(\\S+|\\/|\\.)+"
+	//GoModImportEnd will cover the line in the go.mod file that ends indicating the libraries included: ")", as we go top to bottom in the file this is the first closing bracket after finding "required ("
+	GoModImportEnd = "^\\).*"
+	//GoModLineImport will cover imports on a line between "require (" and ")". Imports will be of the format words, forward slash or "."
+	GoModLineImport = "(\\S+|\\/|\\.)+"
 
+	//GoFileImportStart indicates a multiline or single line import, either "import (" or "import \""
 	GoFileImportStart = "^import (\\(|\").*"
-	GoFileImportEnd   = "^(\\)|var|func|type).*"
-	GoFileLineImport  = "\"(\\S+|\\/|\\.)+\""
+	//GoFileImportEnd indicates the end of imports, either by a closing bracket ")", a variable definition, a function definition or struct definition
+	GoFileImportEnd = "^(\\)|var|func|type).*"
+	//GoFileLineImport indicates the import found in a multiline import between the double quotes
+	GoFileLineImport = "\"(\\S+|\\/|\\.)+\""
 )
 
 //NewGolangReportCmd creates a new report command
