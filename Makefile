@@ -1,13 +1,9 @@
 default: build
 
-MAJOR_VERSION=0
-MINOR_VERSION=1
-PATCH_VERSION=0
-
-
+LIC_VERSION=$(shell cat VERSION)
 
 build: test cover
-	go build -i -o bin/lic -ldflags "-X pkg/lic/cmd.Version=${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}" ./cmd/lic
+	go build -i -o bin/lic -ldflags "-X pkg/lic/cmd.Version=${LIC_VERSION}" ./cmd/lic
 
 test:
 	go test ./...
