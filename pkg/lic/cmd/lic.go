@@ -29,7 +29,7 @@ Find more information at: https://github.com/tehcyx/lic
 	cmd.AddCommand(versionCmd)
 
 	reportCmdOpts := report.NewReportOptions(o)
-	reportCmd := report.NewReportCmd(reportCmdOpts)
+	reportCmd := report.NewReportCmd()
 	cmd.AddCommand(reportCmd)
 
 	reportGolangCmd := report.NewGolangReportCmd(reportCmdOpts)
