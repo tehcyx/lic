@@ -44,13 +44,34 @@ const (
 var (
 	//DefaultWhitelistResources default list of acceptable imports that will get auto-parsed and checked for licenses
 	DefaultWhitelistResources = []string{"github.com", "gopkg.in", "golang.org"}
+
+	//StdLibraryList list of Standard Library imports as of go 1.11.5
+	StdLibraryList = []string{
+		"archive", "archive/tar", "archive/zip", "bufio", "builtin", "bytes", "compress", "compress/bzip2", "compress/flate",
+		"compress/gzip", "compress/lzw", "compress/zlib", "container	", "container/heap", "container/list", "container/ring",
+		"context", "crypto", "crypto/aes", "crypto/cipher", "crypto/des", "crypto/dsa", "crypto/ecdsa", "crypto/elliptic",
+		"crypto/hmac", "crypto/md5", "crypto/rand", "crypto/rc4", "crypto/rsa", "crypto/sha1", "crypto/sha256", "crypto/sha512",
+		"crypto/subtle", "crypto/tls", "crypto/x509", "crypto/x509/pkix", "database", "database/sql", "database/sql/driver",
+		"debug", "debug/dwarf", "debug/elf", "debug/gosym", "debug/macho", "debug/pe", "debug/plan9obj", "encoding",
+		"encoding/ascii85", "encoding/asn1", "encoding/base32", "encoding/base64", "encoding/binary", "encoding/csv",
+		"encoding/gob", "encoding/hex", "encoding/json", "encoding/pem", "encoding/xml", "errors", "expvar", "flag", "fmt",
+		"go", "go/ast", "go/build", "go/constant", "go/doc", "go/format", "go/importer", "go/parser", "go/printer",
+		"go/scanner", "go/token", "go/types", "hash", "hash/adler32", "hash/crc32", "hash/crc64", "hash/fnv", "html",
+		"html/template", "image", "image/color", "image/palette", "image/draw", "image/gif", "image/jpeg", "image/png", "index",
+		"index/suffixarray", "io", "io/ioutil", "log", "log/syslog", "math", "math/big", "math/bits", "math/cmplx", "math/rand",
+		"mime", "mime/multipart", "mime/quotedprintable", "net", "net/http", "net/http/cgi", "net/http/cookiejar", "net/http/fcgi",
+		"net/http/httptest", "net/http/httptrace", "net/http/httputil", "net/http/pprof", "net/mail", "net/rpc", "net/rpc/jsonrpc",
+		"net/smtp", "net/textproto", "net/url", "os", "os/exec", "os/signal", "os/user", "path", "path/filepath", "plugin",
+		"reflect", "regexp", "regexp/syntax", "runtime", "runtime/cgo", "runtime/debug", "runtime/msan", "runtime/pprof",
+		"runtime/race", "runtime/trace", "sort", "strconv", "strings", "sync", "sync/atomic", "syscall", "syscall/js", "testing",
+		"testing/iotest", "testing/quick", "text", "text/scanner", "text/tabwriter", "text/template", "text/template/parse",
+		"time", "unicode", "unicode/utf16", "unicode/utf8", "unsafe",
+	}
 )
 
 //GolangReportOptions defines available options for the command
 type GolangReportOptions struct {
 	*ReportOptions
-	WhitelistSourcesRegex []string
-	BlacklistSourcesRegex []string
 }
 
 //NewGolangReportOptions creates options with default values
@@ -98,7 +119,10 @@ func (o *GolangReportOptions) Run() error {
 		}
 		o.SrcPath = dir
 	}
+
 	var imports map[string]int
+	var packageName string
+
 	imports = make(map[string]int)
 
 	goModPath := path.Join(o.SrcPath, "go.mod")
@@ -108,9 +132,14 @@ func (o *GolangReportOptions) Run() error {
 		if err != nil {
 			log.Println("Error reading imports from go.mod file. Reading file tree now.")
 		}
-	} else if goPath := os.Getenv("GOPATH"); goPath != "" {
+		packageName, err = fileop.ReadModPackageName(goModPath)
+		if err != nil {
+			log.Println("Couldn't read package name from go.mod file. Ignoring.")
+		}
+	}
+
+	if goPath := os.Getenv("GOPATH"); goPath != "" && len(imports) == 0 {
 		// 2) PATH go.mod file DOES NOT EXIST
-		var packageName string
 		if match, _ := regexp.MatchString(goPath+"/src/.*", o.SrcPath); match {
 			re := regexp.MustCompile(goPath + "/src/(.*)")
 			res := re.FindStringSubmatch(o.SrcPath)
@@ -140,17 +169,24 @@ func (o *GolangReportOptions) Run() error {
 					imports[p] = 1
 				}
 			}
-			// imports[f] = 1
 		}
-	} else {
+	}
+	if len(imports) == 0 {
 		fmt.Println("Can't run on source folder. Project doesn't have a go.mod file or $GOPATH is not specified.")
 		os.Exit(1)
+	}
+
+	// filter out Standard Library from imports, the rest should be URLs
+	for _, k := range StdLibraryList {
+		delete(imports, k)
 	}
 
 	var urlMap map[string]int
 	urlMap = make(map[string]int)
 
 	for u := range imports {
+		var whitelistViolation bool
+		whitelistViolation = true
 		for _, whitelist := range DefaultWhitelistResources {
 			if strings.Contains(u, whitelist) {
 				parsedURL, err := url.Parse("https://" + u)
@@ -159,7 +195,11 @@ func (o *GolangReportOptions) Run() error {
 					continue
 				}
 				urlMap[parsedURL.String()] = 1
+				whitelistViolation = false // TODO collect all illegal imports, change to os.Exit(1) if any are detected in the end
 			}
+		}
+		if whitelistViolation {
+			fmt.Printf("Illegal import detected: %s\n", u)
 		}
 	}
 
@@ -168,8 +208,6 @@ func (o *GolangReportOptions) Run() error {
 	// for u := range urlMap {
 	// 	visitURL(u)
 	// }
-
-	//TODO: Check go.mod/go.sum, if they don't exist, open each file and check the imports statement
 
 	return nil
 }
