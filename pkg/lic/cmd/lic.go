@@ -28,11 +28,11 @@ Find more information at: https://github.com/tehcyx/lic
 	versionCmd := NewVersionCmd(NewVersionOptions(o))
 	cmd.AddCommand(versionCmd)
 
-	reportCmdOpts := report.NewReportOptions(o)
+	golangReportOptions := report.NewGolangReportOptions(o)
 	reportCmd := report.NewReportCmd()
 	cmd.AddCommand(reportCmd)
 
-	reportGolangCmd := report.NewGolangReportCmd(reportCmdOpts)
+	reportGolangCmd := report.NewGolangReportCmd(golangReportOptions)
 	reportCmd.AddCommand(reportGolangCmd)
 
 	return cmd

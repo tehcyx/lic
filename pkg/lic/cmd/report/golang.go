@@ -1,23 +1,25 @@
-// Package report implements the ``lic report'' command.
+// Package report implements the ``lic report golang'' command.
 package report
 
 import (
-	"errors"
 	"fmt"
 	"go/parser"
 	"go/token"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/tehcyx/lic/internal/fileop"
+	"github.com/tehcyx/lic/pkg/lic/core"
 )
 
 const (
@@ -39,8 +41,25 @@ const (
 	GoFileExtension = ".*\\.go$"
 )
 
+var (
+	//DefaultWhitelistResources default list of acceptable imports that will get auto-parsed and checked for licenses
+	DefaultWhitelistResources = []string{"github.com", "gopkg.in", "golang.org"}
+)
+
+//GolangReportOptions defines available options for the command
+type GolangReportOptions struct {
+	*ReportOptions
+	WhitelistSourcesRegex []string
+	BlacklistSourcesRegex []string
+}
+
+//NewGolangReportOptions creates options with default values
+func NewGolangReportOptions(o *core.Options) *GolangReportOptions {
+	return &GolangReportOptions{ReportOptions: NewReportOptions(o)}
+}
+
 //NewGolangReportCmd creates a new report command
-func NewGolangReportCmd(o *ReportOptions) *cobra.Command {
+func NewGolangReportCmd(o *GolangReportOptions) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "golang",
 		Short:   "Generates a report of current working directory",
@@ -59,7 +78,7 @@ func NewGolangReportCmd(o *ReportOptions) *cobra.Command {
 }
 
 //Run runs the command
-func (o *ReportOptions) Run() error {
+func (o *GolangReportOptions) Run() error {
 	//TODO (IF I need my own source codes actual package name [I assume I do to filter out self-imports])
 	//
 	// Two ways:
@@ -91,10 +110,15 @@ func (o *ReportOptions) Run() error {
 		}
 	} else if goPath := os.Getenv("GOPATH"); goPath != "" {
 		// 2) PATH go.mod file DOES NOT EXIST
-		var packageName []string
+		var packageName string
 		if match, _ := regexp.MatchString(goPath+"/src/.*", o.SrcPath); match {
 			re := regexp.MustCompile(goPath + "/src/(.*)")
-			packageName = re.FindStringSubmatch(o.SrcPath)
+			res := re.FindStringSubmatch(o.SrcPath)
+			if len(res) > 1 {
+				packageName = res[1]
+			} else {
+				fmt.Println("Can't make assumption on package name, continuing without.")
+			}
 		} else {
 			fmt.Println("Can't run on source folder. Project is not on $GOPATH.")
 			os.Exit(1)
@@ -106,7 +130,16 @@ func (o *ReportOptions) Run() error {
 		}
 		for _, f := range files {
 			res, err := parseImportsGo(f)
-			fmt.Println(res, err)
+			if err != nil {
+				fmt.Println("Couldn't parse go imports from files")
+				os.Exit(1)
+			}
+			for p := range res {
+				if !strings.Contains(p, packageName) {
+					p = strings.Replace(p, "\"", "", -1)
+					imports[p] = 1
+				}
+			}
 			// imports[f] = 1
 		}
 	} else {
@@ -114,25 +147,27 @@ func (o *ReportOptions) Run() error {
 		os.Exit(1)
 	}
 
-	fmt.Println(imports)
-
 	var urlMap map[string]int
 	urlMap = make(map[string]int)
 
 	for u := range imports {
-		url, err := checkGitHubDependency(u)
-		if err != nil {
-			log.Println(err.Error())
-			continue
+		for _, whitelist := range DefaultWhitelistResources {
+			if strings.Contains(u, whitelist) {
+				parsedURL, err := url.Parse("https://" + u)
+				if err != nil {
+					fmt.Printf("not a url: %s", u)
+					continue
+				}
+				urlMap[parsedURL.String()] = 1
+			}
 		}
-		urlMap[url] = 1
 	}
 
 	fmt.Printf("%+v\n", urlMap)
 
-	for u := range urlMap {
-		visitUrl(u)
-	}
+	// for u := range urlMap {
+	// 	visitURL(u)
+	// }
 
 	//TODO: Check go.mod/go.sum, if they don't exist, open each file and check the imports statement
 
@@ -141,17 +176,14 @@ func (o *ReportOptions) Run() error {
 
 func checkGitHubDependency(url string) (string, error) {
 	re := regexp.MustCompile("^github.com(\\/\\w+\\/\\w+).*")
-	if url[0] == '"' && url[len(url)] == '"' {
-		url = url[1:len(url)]
-	}
 	result := re.FindStringSubmatch(url)
 	if len(result) > 1 {
 		return "http://api.github.com/repos" + result[1] + "/license", nil
 	}
-	return "", errors.New("Not a GitHub url")
+	return "", fmt.Errorf("Not a GitHub url: %s", url)
 }
 
-func visitUrl(url string) {
+func visitURL(url string) {
 	var netClient = &http.Client{
 		Timeout: time.Second * 10,
 	}

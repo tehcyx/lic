@@ -1,3 +1,4 @@
+// Package report implements the ``lic report'' command.
 package report
 
 import (
