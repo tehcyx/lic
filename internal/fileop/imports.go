@@ -9,35 +9,36 @@ import (
 )
 
 //ReadImports reads imports on a given filepath with the given regex params for start, end and line
-func ReadImports(filePath, importStart, importEnd, importInline string) ([]string, error) {
-	var imports []string
+func ReadImports(filePath, importStart, importEnd, importInline string) (map[string]int, error) {
+	var imports map[string]int
+	imports = make(map[string]int)
 
-	if err := Exists(filePath); err == nil {
-		file, err := os.Open(filePath)
-		if err != nil {
-			msg := fmt.Errorf("Something went wrong opening the file %s", filePath)
-			log.Printf(msg.Error())
-			return []string{}, msg
-		}
-		defer file.Close()
+	file, err := os.Open(filePath)
+	if err != nil {
+		msg := fmt.Errorf("Something went wrong opening the file %s", filePath)
+		log.Printf(msg.Error())
+		return nil, msg
+	}
+	defer file.Close()
 
-		scanner := bufio.NewScanner(file)
-		var importfound bool
-		for scanner.Scan() {
-			lineText := scanner.Text()
-			if importfound == false {
-				if match, _ := regexp.MatchString(importStart, lineText); match {
-					importfound = true
-				}
+	scanner := bufio.NewScanner(file)
+	var importfound bool
+	for scanner.Scan() {
+		lineText := scanner.Text()
+		if importfound == false {
+			if match, _ := regexp.MatchString(importStart, lineText); match {
+				importfound = true
+			}
+		} else {
+			if match, _ := regexp.MatchString(importEnd, lineText); match {
+				return imports, nil
 			} else {
-				if match, _ := regexp.MatchString(importEnd, lineText); match {
-					return imports, nil
-				} else {
-					re := regexp.MustCompile(importInline) //TODO: this problably doesn't cover single line imports
-					stringMatch := re.FindStringSubmatch(lineText)
-					imports = append(imports, stringMatch[0])
-					continue
+				re := regexp.MustCompile(importInline) //TODO: this problably doesn't cover single line imports
+				stringMatch := re.FindStringSubmatch(lineText)
+				if len(stringMatch) > 0 {
+					imports[stringMatch[0]] = 1
 				}
+				continue
 			}
 		}
 	}
