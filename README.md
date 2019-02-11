@@ -38,7 +38,8 @@ Global Flags:
 Make sure to run `go get` to install missing dependencies and then just run `make` to get an executable into the /bin/ folder.
 
 ## Contribute
-This tool should support multiple languages. Currently I'm working on golang. Feel free to chip in there or contribute a new language set (I'd be happy to see Java, JavaScript/Typescript).
+This tool should support multiple languages. Currently I'm working on golang. Feel free to chip in there or contribute a new language set (I'd be happy to see Java, JavaScript/Typescript). Tests are rare so far, so there's definitely more needed.
+
 The goal of this tool for me to get a reliable list of used software components on any sources I throw at it, to be able to check licenses against whatever licenses I want to use/don't want to use.
 
 The implementation will most likely change over time and is as of now a moving spec. The report might need to have more information to it than I currently foresee.

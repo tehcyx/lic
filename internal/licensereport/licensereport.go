@@ -3,6 +3,8 @@ package licensereport
 //LicenseReport results of a scan
 type LicenseReport struct {
 	ProjectID         string
+	ProjectVersion    string
+	ProjectHash       string
 	ValidatedLicenses []LicenseResult
 	Violations        []LicenseResult
 }

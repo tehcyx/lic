@@ -94,7 +94,7 @@ func NewGolangReportCmd(o *GolangReportOptions) *cobra.Command {
 	cmd.Flags().BoolVarP(&o.Upload, "upload", "u", false, "Upload report to specified report endpoint to capture continuously")
 	cmd.Flags().StringVarP(&o.UploadEndpoint, "upload-endpoint", "", "", "URL of the endpoint to report results of the scans")
 
-	cmd.Flags().StringVarP(&o.SrcPath, "src-path", "", "", "Local path of sources to scan")
+	cmd.Flags().StringVarP(&o.SrcPath, "src", "", "", "Local path of sources to scan")
 	cmd.Flags().BoolVarP(&o.HTMLOutput, "html-output", "o", false, "Specifies if results should be published as .html-file stored in current path")
 
 	return cmd
@@ -151,7 +151,7 @@ func (o *GolangReportOptions) Run() error {
 				fmt.Println("Can't make assumption on package name, continuing without.")
 			}
 		} else {
-			fmt.Println("Can't run on source folder. Project is not on $GOPATH.")
+			fmt.Printf("Can't run on source folder: '%s'. Project is not on $GOPATH.\n", o.SrcPath)
 			os.Exit(1)
 		}
 		files, err := fileop.FilesInPath(o.SrcPath, ".*\\.go")
@@ -174,12 +174,17 @@ func (o *GolangReportOptions) Run() error {
 		}
 	}
 	if len(imports) == 0 {
-		fmt.Println("Can't run on source folder. Project doesn't have a go.mod file or $GOPATH is not specified.")
+		fmt.Printf("Can't run on source folder: '%s'. Project doesn't have a go.mod file or $GOPATH is not specified.\n", o.SrcPath)
 		os.Exit(1)
 	}
 
 	var resultReport licensereport.LicenseReport
 	resultReport.ProjectID = packageName
+	resultReport.ProjectVersion = "0.1.0" // TODO pass in project version?
+
+	h := sha256.New()
+	h.Write([]byte(resultReport.ProjectID + resultReport.ProjectVersion))
+	resultReport.ProjectHash = fmt.Sprintf("%x", (h.Sum(nil)))
 
 	// filter out Standard Library from imports, the rest should be URLs
 	for _, k := range stdLibraryList {
@@ -244,7 +249,10 @@ func (o *GolangReportOptions) Run() error {
 		resultReport.ValidatedLicenses = append(resultReport.ValidatedLicenses, res)
 	}
 
-	fmt.Printf("%#v\n", resultReport)
+	printReport(resultReport)
+	if len(resultReport.Violations) > 0 {
+		os.Exit(1)
+	}
 
 	return nil
 }
@@ -288,4 +296,20 @@ func parseImportsGo(file string) (map[string]int, error) {
 		imports[s.Path.Value] = 1
 	}
 	return imports, nil
+}
+
+func printReport(rep licensereport.LicenseReport) {
+	fmt.Printf("Report for %s %s\n", rep.ProjectID, rep.ProjectVersion)
+	fmt.Printf("Generated project hash: %s\n", rep.ProjectHash)
+	fmt.Println("")
+	fmt.Printf("During the scan there were %d external dependencies found:\n", len(rep.ValidatedLicenses))
+	for _, licen := range rep.ValidatedLicenses {
+		fmt.Printf("\tImport: %s, Version: %s\n", licen.ProjectID, licen.ProjectVersion)
+	}
+	if len(rep.Violations) > 0 {
+		fmt.Printf("Additionally %d blacklisted imports were found:\n", len(rep.Violations))
+	}
+	for _, viol := range rep.Violations {
+		fmt.Printf("\tImport: %s, Version: %s\n", viol.ProjectID, viol.ProjectVersion)
+	}
 }

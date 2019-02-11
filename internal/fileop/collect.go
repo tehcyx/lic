@@ -7,6 +7,7 @@ import (
 	"regexp"
 )
 
+//FilesInPath given a path and a regex pattern string, the function will return the filepaths that match the pattern
 func FilesInPath(rootPath, filePattern string) ([]string, error) {
 	var files []string
 
