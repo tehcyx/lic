@@ -2,7 +2,7 @@
 Lic is an easily extensible & flexible report generator to statically analyse your local sources and create a report on the fly or upload said report to a server.
 
 ## Usage
-```
+```shell
 Usage:
   lic [command]
 
@@ -17,7 +17,7 @@ Flags:
 ```
 
 Various commands will have sub commands, for example the report command will differentiate with the supported languages (currently only golang).
-```
+```shell
 Usage:
   lic report [command]
 
