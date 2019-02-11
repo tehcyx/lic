@@ -2,6 +2,7 @@
 package report
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"go/parser"
 	"go/token"
@@ -19,6 +20,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/tehcyx/lic/internal/fileop"
+	"github.com/tehcyx/lic/internal/licensereport"
 	"github.com/tehcyx/lic/pkg/lic/core"
 )
 
@@ -46,7 +48,7 @@ var (
 	DefaultWhitelistResources = []string{"github.com", "gopkg.in", "golang.org"}
 
 	//StdLibraryList list of Standard Library imports as of go 1.11.5
-	StdLibraryList = []string{
+	stdLibraryList = []string{
 		"archive", "archive/tar", "archive/zip", "bufio", "builtin", "bytes", "compress", "compress/bzip2", "compress/flate",
 		"compress/gzip", "compress/lzw", "compress/zlib", "container	", "container/heap", "container/list", "container/ring",
 		"context", "crypto", "crypto/aes", "crypto/cipher", "crypto/des", "crypto/dsa", "crypto/ecdsa", "crypto/elliptic",
@@ -176,9 +178,26 @@ func (o *GolangReportOptions) Run() error {
 		os.Exit(1)
 	}
 
+	var resultReport licensereport.LicenseReport
+	resultReport.ProjectID = packageName
+
 	// filter out Standard Library from imports, the rest should be URLs
-	for _, k := range StdLibraryList {
-		delete(imports, k)
+	for _, k := range stdLibraryList {
+		if _, ok := imports[k]; ok {
+
+			// reference standard library in the report
+			var res licensereport.LicenseResult
+			res.License = licensereport.Licenses["na"]
+			res.ProjectID = k
+			res.ProjectVersion = ""
+			h := sha256.New()
+			h.Write([]byte(res.ProjectID + res.ProjectVersion))
+			res.ProjectHash = fmt.Sprintf("%x", (h.Sum(nil)))
+			resultReport.ValidatedLicenses = append(resultReport.ValidatedLicenses, res)
+
+			// delete it from scan worthy import list
+			delete(imports, k)
+		}
 	}
 
 	var urlMap map[string]int
@@ -200,14 +219,32 @@ func (o *GolangReportOptions) Run() error {
 		}
 		if whitelistViolation {
 			fmt.Printf("Illegal import detected: %s\n", u)
+			var res licensereport.LicenseResult
+			res.License = licensereport.Licenses["na"]
+			res.ProjectID = u
+			res.ProjectVersion = ""
+			h := sha256.New()
+			h.Write([]byte(res.ProjectID + res.ProjectVersion))
+			res.ProjectHash = fmt.Sprintf("%x", (h.Sum(nil)))
+			resultReport.Violations = append(resultReport.Violations, res)
 		}
 	}
 
 	fmt.Printf("%+v\n", urlMap)
 
-	// for u := range urlMap {
-	// 	visitURL(u)
-	// }
+	for u := range urlMap {
+		// visitURL(u)
+		var res licensereport.LicenseResult
+		res.License = licensereport.Licenses["na"]
+		res.ProjectID = u
+		res.ProjectVersion = ""
+		h := sha256.New()
+		h.Write([]byte(res.ProjectID + res.ProjectVersion))
+		res.ProjectHash = fmt.Sprintf("%x", (h.Sum(nil)))
+		resultReport.ValidatedLicenses = append(resultReport.ValidatedLicenses, res)
+	}
+
+	fmt.Printf("%#v\n", resultReport)
 
 	return nil
 }
