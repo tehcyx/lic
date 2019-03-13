@@ -1,4 +1,4 @@
-// Package report implements the ``lic report golang'' command.
+// Package report implements the `lic report golang` (`lic r go`)command.
 package report
 
 import (
@@ -75,12 +75,12 @@ var (
 
 //GolangReportOptions defines available options for the command
 type GolangReportOptions struct {
-	*ReportOptions
+	*Options
 }
 
 //NewGolangReportOptions creates options with default values
 func NewGolangReportOptions(o *core.Options) *GolangReportOptions {
-	return &GolangReportOptions{ReportOptions: NewReportOptions(o)}
+	return &GolangReportOptions{Options: NewReportOptions(o)}
 }
 
 //NewGolangReportCmd creates a new report command

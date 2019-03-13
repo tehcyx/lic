@@ -1,4 +1,4 @@
-// Package report implements the ``lic report'' command.
+// Package report implements the `lic report` command.
 package report
 
 import (
@@ -6,8 +6,8 @@ import (
 	"github.com/tehcyx/lic/pkg/lic/core"
 )
 
-//ReportOptions defines available options for the command
-type ReportOptions struct {
+//Options defines available options for the command
+type Options struct {
 	*core.Options
 	Upload         bool
 	UploadEndpoint string
@@ -16,8 +16,8 @@ type ReportOptions struct {
 }
 
 //NewReportOptions creates options with default values
-func NewReportOptions(o *core.Options) *ReportOptions {
-	return &ReportOptions{Options: o}
+func NewReportOptions(o *core.Options) *Options {
+	return &Options{Options: o}
 }
 
 //NewReportCmd creates a new report command
