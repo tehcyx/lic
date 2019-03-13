@@ -10,9 +10,9 @@ import (
 )
 
 //ReadImports reads imports on a given filepath with the given regex params for start, end and line
-func ReadImports(filePath, importStart, importEnd, importInline string) (map[string]int, error) {
-	var imports map[string]int
-	imports = make(map[string]int)
+func ReadImports(filePath, importStart, importEnd, importLine, importInline string) (map[string]string, error) {
+	var imports map[string]string
+	imports = make(map[string]string)
 
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -24,26 +24,31 @@ func ReadImports(filePath, importStart, importEnd, importInline string) (map[str
 
 	scanner := bufio.NewScanner(file)
 	var importfound bool
+
+	reInlineImport := regexp.MustCompile(importInline)
+	reLineImport := regexp.MustCompile(importLine)
 	for scanner.Scan() {
 		lineText := scanner.Text()
 		if importfound == false {
 			if match, _ := regexp.MatchString(importStart, lineText); match {
 				importfound = true
 			}
+			stringMatch := reInlineImport.FindStringSubmatch(lineText)
+			if len(stringMatch) > 1 {
+				imports[stringMatch[1]] = stringMatch[2]
+			}
 		} else {
 			if match, _ := regexp.MatchString(importEnd, lineText); match {
 				break
 			} else {
-				re := regexp.MustCompile(importInline) //TODO: this problably doesn't cover single line imports
-				stringMatch := re.FindStringSubmatch(lineText)
+				stringMatch := reLineImport.FindStringSubmatch(lineText)
 				if len(stringMatch) > 0 {
-					imports[stringMatch[0]] = 1
+					imports[stringMatch[0]] = ""
 				}
 				continue
 			}
 		}
 	}
-
 	return imports, nil
 }
 

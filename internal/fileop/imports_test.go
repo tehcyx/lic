@@ -14,6 +14,8 @@ var (
 	GoFileImportEnd = "^(\\)|var|func|type).*"
 	//GoFileLineImport indicates the import found in a multiline import between the double quotes
 	GoFileLineImport = "\"(\\S+|\\/|\\.)+\""
+	//GoModInlineImport will cover single line imports that are just "require github.com/user/repo".
+	GoFileInlineImport = "^require (\\S+|\\/|\\.)+ (\\S+|\\/|\\.)+"
 
 	importStyleOne = `package main
 
@@ -51,7 +53,7 @@ func TestReadImportsSuccess(t *testing.T) {
 		t.Fatalf("couldn't create temp file")
 	}
 
-	imports, err := ReadImports(fname, GoFileImportStart, GoFileImportEnd, GoFileLineImport)
+	imports, err := ReadImports(fname, GoFileImportStart, GoFileImportEnd, GoFileLineImport, GoFileInlineImport)
 	if err != nil {
 		t.Errorf("couldn't process file")
 	}
@@ -68,7 +70,7 @@ func TestReadImportsFail(t *testing.T) {
 	}
 	fname := filepath.Join(dname, "test.go")
 
-	imports, err := ReadImports(fname, GoFileImportStart, GoFileImportEnd, GoFileLineImport)
+	imports, err := ReadImports(fname, GoFileImportStart, GoFileImportEnd, GoFileLineImport, GoFileInlineImport)
 	if err == nil {
 		t.Errorf("file does not exist, test should fail")
 	}

@@ -29,8 +29,10 @@ const (
 	GoModImportStart = "^require \\(.*"
 	//GoModImportEnd will cover the line in the go.mod file that ends indicating the libraries included: ")", as we go top to bottom in the file this is the first closing bracket after finding "required ("
 	GoModImportEnd = "^\\).*"
-	//GoModLineImport will cover imports on a line between "require (" and ")". Imports will be of the format words, forward slash or "."
+	//GoModLineImport will cover imports on a line between "require (" and ")".
 	GoModLineImport = "(\\S+|\\/|\\.)+"
+	//GoModInlineImport will cover single line imports that are just "require github.com/user/repo".
+	GoModInlineImport = "^require (\\S+|\\/|\\.)+ (\\S+|\\/|\\.)+"
 
 	//GoFileImportStart indicates a multiline or single line import, either "import (" or "import \""
 	GoFileImportStart = "^import (\\(|\").*"
@@ -101,13 +103,10 @@ func NewGolangReportCmd(o *GolangReportOptions) *cobra.Command {
 }
 
 //Run runs the command
+// Scan has to exclusive paths this could go:
+//		1) If there's a go.mod file, check for "module" line and read the packages path
+//		2) If there's no go.mod file, check $GOPATH and make assumption based on that
 func (o *GolangReportOptions) Run() error {
-	//TODO (IF I need my own source codes actual package name [I assume I do to filter out self-imports])
-	//
-	// Two ways:
-	//		1) If there's a go.mod file, check for "module" line and read the packages path
-	//		2) If there's no go.mod file, check $GOPATH and make assumption based on that
-	//
 	if o.SrcPath != "" {
 		if err := fileop.Exists(o.SrcPath); err != nil {
 			log.Printf("Path '%s' does not exist or you don't have the proper access rights.\n", o.SrcPath)
@@ -122,15 +121,15 @@ func (o *GolangReportOptions) Run() error {
 		o.SrcPath = dir
 	}
 
-	var imports map[string]int
+	var imports map[string]string
 	var packageName string
 
-	imports = make(map[string]int)
+	imports = make(map[string]string)
 
 	goModPath := path.Join(o.SrcPath, "go.mod")
 	if err := fileop.Exists(goModPath); err == nil {
 		// 1) PATH go.mod file EXISTS
-		imports, err = fileop.ReadImports(goModPath, GoModImportStart, GoModImportEnd, GoModLineImport)
+		imports, err = fileop.ReadImports(goModPath, GoModImportStart, GoModImportEnd, GoModLineImport, GoModInlineImport)
 		if err != nil {
 			log.Println("Error reading imports from go.mod file. Reading file tree now.")
 		}
@@ -168,7 +167,7 @@ func (o *GolangReportOptions) Run() error {
 			for p := range res {
 				if !strings.Contains(p, packageName) {
 					p = strings.Replace(p, "\"", "", -1)
-					imports[p] = 1
+					imports[p] = ""
 				}
 			}
 		}
@@ -189,12 +188,11 @@ func (o *GolangReportOptions) Run() error {
 	// filter out Standard Library from imports, the rest should be URLs
 	for _, k := range stdLibraryList {
 		if _, ok := imports[k]; ok {
-
 			// reference standard library in the report
 			var res licensereport.LicenseResult
 			res.License = licensereport.Licenses["na"]
 			res.ProjectID = k
-			res.ProjectVersion = ""
+			res.ProjectVersion = imports[k]
 			h := sha256.New()
 			h.Write([]byte(res.ProjectID + res.ProjectVersion))
 			res.ProjectHash = fmt.Sprintf("%x", (h.Sum(nil)))
@@ -205,8 +203,8 @@ func (o *GolangReportOptions) Run() error {
 		}
 	}
 
-	var urlMap map[string]int
-	urlMap = make(map[string]int)
+	var urlMap map[string]string
+	urlMap = make(map[string]string)
 
 	for u := range imports {
 		var whitelistViolation bool
@@ -218,7 +216,7 @@ func (o *GolangReportOptions) Run() error {
 					fmt.Printf("not a url: %s", u)
 					continue
 				}
-				urlMap[parsedURL.String()] = 1
+				urlMap[u] = parsedURL.String()
 				whitelistViolation = false // TODO collect all illegal imports, change to os.Exit(1) if any are detected in the end
 			}
 		}
@@ -235,14 +233,12 @@ func (o *GolangReportOptions) Run() error {
 		}
 	}
 
-	fmt.Printf("%+v\n", urlMap)
-
 	for u := range urlMap {
-		// visitURL(u)
+		// visitURL(urlMap[u])
 		var res licensereport.LicenseResult
 		res.License = licensereport.Licenses["na"]
 		res.ProjectID = u
-		res.ProjectVersion = ""
+		res.ProjectVersion = imports[u]
 		h := sha256.New()
 		h.Write([]byte(res.ProjectID + res.ProjectVersion))
 		res.ProjectHash = fmt.Sprintf("%x", (h.Sum(nil)))
