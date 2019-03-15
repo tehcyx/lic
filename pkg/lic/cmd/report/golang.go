@@ -179,7 +179,7 @@ func (o *GolangReportOptions) Run() error {
 
 	var resultReport licensereport.LicenseReport
 	resultReport.ProjectID = packageName
-	resultReport.ProjectVersion = "0.1.0" // TODO pass in project version?
+	resultReport.ProjectVersion = "0.0.0" // TODO pass in project version?
 
 	h := sha256.New()
 	h.Write([]byte(resultReport.ProjectID + resultReport.ProjectVersion))

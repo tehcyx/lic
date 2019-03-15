@@ -8,8 +8,11 @@ import (
 	"github.com/tehcyx/lic/pkg/lic/core"
 )
 
-//Version contains the kyma-cli binary version injected by the build system
+//Version contains the lic-cli binary version injected by the build system
 var Version string
+
+//GitCommit contains the git commit sha, that the binary was built with, injected by the build system
+var GitCommit string
 
 //VersionOptions defines available options for the command
 type VersionOptions struct {
@@ -40,7 +43,11 @@ func (o *VersionOptions) Run() error {
 	if version == "" {
 		version = "N/A"
 	}
-	fmt.Printf("lic CLI version: %s\n", version)
+	commit := GitCommit
+	if commit == "" {
+		commit = "N/A"
+	}
+	fmt.Printf("lic CLI version: %s, commit: %s\n", version, commit)
 
 	return nil
 }
