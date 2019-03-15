@@ -110,18 +110,17 @@ func NewGolangReportCmd(o *GolangReportOptions) *cobra.Command {
 //		2) If there's no go.mod file, check $GOPATH and make assumption based on that
 func (o *GolangReportOptions) Run() error {
 	if o.SrcPath != "" {
-		fmt.Println(o.SrcPath)
 		if err := fileop.Exists(o.SrcPath); err != nil {
 			err := fmt.Errorf("path '%s' does not exist or you don't have the proper access rights", o.SrcPath)
 			log.Printf("%s\n", err.Error())
-			return err
+			os.Exit(1)
 		}
 	} else {
 		dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 		if err != nil {
 			err := fmt.Errorf("couldn't get application path, exiting")
 			log.Printf("%s\n", err.Error())
-			return err
+			os.Exit(1)
 		}
 		o.SrcPath = dir
 	}
@@ -157,20 +156,20 @@ func (o *GolangReportOptions) Run() error {
 		} else {
 			err := fmt.Errorf("can't run on source folder: '%s'. project is not on $GOPATH", o.SrcPath)
 			log.Printf("%s\n", err.Error())
-			return err
+			os.Exit(1)
 		}
 		files, err := fileop.FilesInPath(o.SrcPath, ".*\\.go")
 		if err != nil {
 			err := fmt.Errorf("couldn't read files in $GOPATH")
 			log.Printf("%s\n", err.Error())
-			return err
+			os.Exit(1)
 		}
 		for _, f := range files {
 			res, err := parseImportsGo(f)
 			if err != nil {
 				err := fmt.Errorf("couldn't parse go imports from files")
 				log.Printf("%s\n", err.Error())
-				return err
+				os.Exit(1)
 			}
 			for p := range res {
 				if !strings.Contains(p, packageName) {
@@ -183,7 +182,7 @@ func (o *GolangReportOptions) Run() error {
 	if len(imports) == 0 {
 		err := fmt.Errorf("can't run on source folder: '%s'. project doesn't have a go.mod file or $GOPATH is not specified", o.SrcPath)
 		log.Printf("%s\n", err.Error())
-		return err
+		os.Exit(1)
 	}
 
 	var resultReport licensereport.LicenseReport
