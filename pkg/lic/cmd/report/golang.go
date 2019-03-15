@@ -110,15 +110,18 @@ func NewGolangReportCmd(o *GolangReportOptions) *cobra.Command {
 //		2) If there's no go.mod file, check $GOPATH and make assumption based on that
 func (o *GolangReportOptions) Run() error {
 	if o.SrcPath != "" {
+		fmt.Println(o.SrcPath)
 		if err := fileop.Exists(o.SrcPath); err != nil {
-			log.Printf("Path '%s' does not exist or you don't have the proper access rights.\n", o.SrcPath)
-			os.Exit(1)
+			err := fmt.Errorf("path '%s' does not exist or you don't have the proper access rights", o.SrcPath)
+			log.Printf("%s\n", err.Error())
+			return err
 		}
 	} else {
 		dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 		if err != nil {
-			log.Println("Couldn't get application path, exiting")
-			os.Exit(1)
+			err := fmt.Errorf("couldn't get application path, exiting")
+			log.Printf("%s\n", err.Error())
+			return err
 		}
 		o.SrcPath = dir
 	}
@@ -152,19 +155,22 @@ func (o *GolangReportOptions) Run() error {
 				fmt.Println("Can't make assumption on package name, continuing without.")
 			}
 		} else {
-			fmt.Printf("Can't run on source folder: '%s'. Project is not on $GOPATH.\n", o.SrcPath)
-			os.Exit(1)
+			err := fmt.Errorf("can't run on source folder: '%s'. project is not on $GOPATH", o.SrcPath)
+			log.Printf("%s\n", err.Error())
+			return err
 		}
 		files, err := fileop.FilesInPath(o.SrcPath, ".*\\.go")
 		if err != nil {
-			fmt.Println("Couldn't read files in $GOPATH", packageName)
-			os.Exit(1)
+			err := fmt.Errorf("couldn't read files in $GOPATH")
+			log.Printf("%s\n", err.Error())
+			return err
 		}
 		for _, f := range files {
 			res, err := parseImportsGo(f)
 			if err != nil {
-				fmt.Println("Couldn't parse go imports from files")
-				os.Exit(1)
+				err := fmt.Errorf("couldn't parse go imports from files")
+				log.Printf("%s\n", err.Error())
+				return err
 			}
 			for p := range res {
 				if !strings.Contains(p, packageName) {
@@ -175,8 +181,9 @@ func (o *GolangReportOptions) Run() error {
 		}
 	}
 	if len(imports) == 0 {
-		fmt.Printf("Can't run on source folder: '%s'. Project doesn't have a go.mod file or $GOPATH is not specified.\n", o.SrcPath)
-		os.Exit(1)
+		err := fmt.Errorf("can't run on source folder: '%s'. project doesn't have a go.mod file or $GOPATH is not specified", o.SrcPath)
+		log.Printf("%s\n", err.Error())
+		return err
 	}
 
 	var resultReport licensereport.LicenseReport
