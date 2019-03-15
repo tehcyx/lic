@@ -13,6 +13,7 @@ type Options struct {
 	UploadEndpoint string
 	SrcPath        string
 	HTMLOutput     bool
+	ProjectVersion string
 }
 
 //NewReportOptions creates options with default values

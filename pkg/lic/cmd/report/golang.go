@@ -87,7 +87,7 @@ func NewGolangReportOptions(o *core.Options) *GolangReportOptions {
 func NewGolangReportCmd(o *GolangReportOptions) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "golang",
-		Short:   "Generates a report of current working directory",
+		Short:   "Generates a report of current working directory or specified path",
 		Long:    `Taking in consideration the source on the current path and checking for all licenses, generating a report output in the shell.`,
 		RunE:    func(_ *cobra.Command, _ []string) error { return o.Run() },
 		Aliases: []string{"go"},
@@ -98,6 +98,8 @@ func NewGolangReportCmd(o *GolangReportOptions) *cobra.Command {
 
 	cmd.Flags().StringVarP(&o.SrcPath, "src", "", "", "Local path of sources to scan")
 	cmd.Flags().BoolVarP(&o.HTMLOutput, "html-output", "o", false, "Specifies if results should be published as .html-file stored in current path")
+
+	cmd.Flags().StringVarP(&o.ProjectVersion, "project-version", "", "n/a", "Version of scan target")
 
 	return cmd
 }
@@ -179,7 +181,7 @@ func (o *GolangReportOptions) Run() error {
 
 	var resultReport licensereport.LicenseReport
 	resultReport.ProjectID = packageName
-	resultReport.ProjectVersion = "0.0.0" // TODO pass in project version?
+	resultReport.ProjectVersion = o.ProjectVersion
 
 	h := sha256.New()
 	h.Write([]byte(resultReport.ProjectID + resultReport.ProjectVersion))
@@ -217,11 +219,10 @@ func (o *GolangReportOptions) Run() error {
 					continue
 				}
 				urlMap[u] = parsedURL.String()
-				whitelistViolation = false // TODO collect all illegal imports, change to os.Exit(1) if any are detected in the end
+				whitelistViolation = false // TODO collect all illegal imports
 			}
 		}
 		if whitelistViolation {
-			fmt.Printf("Illegal import detected: %s\n", u)
 			var res licensereport.LicenseResult
 			res.License = licensereport.Licenses["na"]
 			res.ProjectID = u
@@ -298,12 +299,21 @@ func printReport(rep licensereport.LicenseReport) {
 	fmt.Printf("Report for %s %s\n", rep.ProjectID, rep.ProjectVersion)
 	fmt.Printf("Generated project hash: %s\n", rep.ProjectHash)
 	fmt.Println("")
-	fmt.Printf("During the scan there were %d external dependencies found:\n", len(rep.ValidatedLicenses))
+	if len(rep.ValidatedLicenses) == 1 {
+		fmt.Printf("During the scan there was %d external dependency found:\n", len(rep.ValidatedLicenses))
+	} else {
+		fmt.Printf("During the scan there were %d external dependencies found:\n", len(rep.ValidatedLicenses))
+	}
 	for _, licen := range rep.ValidatedLicenses {
 		fmt.Printf("\tImport: %s, Version: %s\n", licen.ProjectID, licen.ProjectVersion)
 	}
-	if len(rep.Violations) > 0 {
-		fmt.Printf("Additionally %d blacklisted imports were found:\n", len(rep.Violations))
+	violLen := len(rep.Violations)
+	if violLen > 0 {
+		if violLen == 1 {
+			fmt.Printf("Additionally %d blacklisted import was found:\n", violLen)
+		} else {
+			fmt.Printf("Additionally %d blacklisted imports were found:\n", violLen)
+		}
 	}
 	for _, viol := range rep.Violations {
 		fmt.Printf("\tImport: %s, Version: %s\n", viol.ProjectID, viol.ProjectVersion)

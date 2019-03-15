@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"runtime"
 
 	"github.com/spf13/cobra"
 
@@ -11,7 +12,7 @@ import (
 //Version contains the lic-cli binary version injected by the build system
 var Version string
 
-//GitCommit contains the git commit sha, that the binary was built with, injected by the build system
+//GitCommit contains the git commit sha that the binary was built with, injected by the build system
 var GitCommit string
 
 //VersionOptions defines available options for the command
@@ -47,7 +48,8 @@ func (o *VersionOptions) Run() error {
 	if commit == "" {
 		commit = "N/A"
 	}
-	fmt.Printf("lic CLI version: %s, commit: %s\n", version, commit)
+	gover := runtime.Version()
+	fmt.Printf("lic CLI version: %s, commit: %s, go version: %s\n", version, commit, gover)
 
 	return nil
 }
