@@ -118,7 +118,7 @@ func (o *GolangReportOptions) Run() error {
 	} else {
 		dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 		if err != nil {
-			err := fmt.Errorf("couldn't get application path, exiting")
+			err := fmt.Errorf("couldn't get application path")
 			log.Printf("%s\n", err.Error())
 			os.Exit(1)
 		}
