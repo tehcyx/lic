@@ -13,7 +13,7 @@ steps:
 #     path: '/gopath'
 - name: 'gcr.io/cloud-builders/go'
   entrypoint: 'sh'
-  args: ['-c','make', 'docker']
+  args: ['-c','make docker']
   env: ['GOPATH=/gopath', 'PROJECT_ROOT=.']
   # volumes:
   # - name: 'go'
