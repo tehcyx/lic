@@ -12,8 +12,8 @@ steps:
 #   - name: 'go'
 #     path: '/gopath'
 - name: 'gcr.io/cloud-builders/go'
-  entrypoint: 'bash'
-  args: ['make', 'docker']
+  entrypoint: 'sh'
+  args: ['-c','make', 'docker']
   env: ['GOPATH=/gopath', 'PROJECT_ROOT=.']
   # volumes:
   # - name: 'go'
