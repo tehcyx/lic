@@ -1,0 +1,23 @@
+steps:
+# - name: 'gcr.io/cloud-builders/go'
+#   args: ['get']
+#   env: ['GOPATH=/gopath', 'PROJECT_ROOT=.']
+#   volumes:
+#   - name: 'go'
+#     path: '/gopath'
+# - name: 'gcr.io/cloud-builders/go'
+#   args: ['get', '-d', './...']
+#   env: ['GOPATH=/gopath', 'PROJECT_ROOT=.']
+#   volumes:
+#   - name: 'go'
+#     path: '/gopath'
+- name: 'gcr.io/cloud-builders/go'
+  entrypoint: 'bash'
+  args: ['make', 'docker']
+  env: ['GOPATH=/gopath', 'PROJECT_ROOT=.']
+  volumes:
+  - name: 'go'
+    path: '/gopath'
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/$PROJECT_ID/$REPO_NAME:$COMMIT_SHA', '-f', 'build/package/Dockerfile', '.']
+images: ['gcr.io/$PROJECT_ID/$REPO_NAME:$COMMIT_SHA']
