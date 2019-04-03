@@ -19,5 +19,5 @@ steps:
   # - name: 'go'
   #   path: '/gopath'
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'gcr.io/$PROJECT_ID/$REPO_NAME:$COMMIT_SHA', '-f', 'build/package/Dockerfile', '.']
-images: ['gcr.io/$PROJECT_ID/$REPO_NAME:$COMMIT_SHA']
+  args: ['build', '-t', 'gcr.io/$PROJECT_ID/lic:$COMMIT_SHA', '-f', 'build/package/Dockerfile', '.']
+images: ['gcr.io/$PROJECT_ID/lic:$COMMIT_SHA']
