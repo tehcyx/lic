@@ -2,6 +2,7 @@
 package report
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"fmt"
 	"go/parser"
@@ -11,6 +12,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -133,6 +135,16 @@ func (o *GolangReportOptions) Run() error {
 		}
 		o.SrcPath = dir
 	}
+	if o.ProjectVersion == "n/a" {
+		cmd := exec.Command("git", "describe", "--tags", "--always")
+		var out bytes.Buffer
+		cmd.Stdout = &out
+		err := cmd.Run()
+		if err != nil {
+			log.Fatal(err)
+		}
+		o.ProjectVersion = out.String()
+	}
 
 	var imports map[string]string
 	var packageName string
@@ -167,7 +179,7 @@ func (o *GolangReportOptions) Run() error {
 			log.Printf("%s\n", err.Error())
 			os.Exit(1)
 		}
-		files, err := fileop.FilesInPath(o.SrcPath, ".*\\.go")
+		files, err := fileop.FilesInPath(o.SrcPath, ".*\\.go$")
 		if err != nil {
 			err := fmt.Errorf("couldn't read files in $GOPATH")
 			log.Printf("%s\n", err.Error())
@@ -314,11 +326,17 @@ func printReport(rep licensereport.LicenseReport) {
 	fmt.Printf("Report for %s %s\n", rep.ProjectID, rep.ProjectVersion)
 	fmt.Printf("Generated project hash: %s\n", rep.ProjectHash)
 	fmt.Println("")
+	numberLicenses := len(rep.ValidatedLicenses)
+	var wasWere, dependencyDependencies string
 	if len(rep.ValidatedLicenses) == 1 {
-		fmt.Printf("During the scan there was %d external dependency found:\n", len(rep.ValidatedLicenses))
+		wasWere = "was"
+		dependencyDependencies = "dependency"
 	} else {
-		fmt.Printf("During the scan there were %d external dependencies found:\n", len(rep.ValidatedLicenses))
+		wasWere = "were"
+		dependencyDependencies = "dependencies"
 	}
+	fmt.Printf("During the scan there %s %d %s found:\n", wasWere, numberLicenses, dependencyDependencies)
+
 	for _, licen := range rep.ValidatedLicenses {
 		fmt.Printf("\tImport: %s, Version: %s\n", licen.ProjectID, licen.ProjectVersion)
 	}
