@@ -73,6 +73,15 @@ var (
 	}
 )
 
+func init() {
+	if os.Getenv("GOPROXY") != "https://proxy.golang.org" {
+		log.Printf("For security reasons we recommend setting GOPROXY environment variable to \"https://proxy.golang.org\"")
+	}
+	if os.Getenv("GOSUMDB") != "sum.golang.org" {
+		log.Printf("For security reasons we recommend setting GOSUMDB environment variable to \"sum.golang.org\"")
+	}
+}
+
 //GolangReportOptions defines available options for the command
 type GolangReportOptions struct {
 	*Options
