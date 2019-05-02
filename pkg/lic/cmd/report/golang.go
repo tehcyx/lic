@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"fmt"
+	// "github.com/pelletier/go-toml/query"
 	"go/parser"
 	"go/token"
 	"io/ioutil"
@@ -21,6 +22,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/pelletier/go-toml"
 	"github.com/tehcyx/lic/internal/fileop"
 	"github.com/tehcyx/lic/internal/licensereport"
 	"github.com/tehcyx/lic/pkg/lic/core"
@@ -179,7 +181,8 @@ func (o *GolangReportOptions) Run() error {
 			log.Printf("%s\n", err.Error())
 			os.Exit(1)
 		}
-		files, err := fileop.FilesInPath(o.SrcPath, ".*\\.go$")
+
+		files, err := fileop.FilesInPath(o.SrcPath, "(?i).*\\.go$")
 		if err != nil {
 			err := fmt.Errorf("couldn't read files in $GOPATH")
 			log.Printf("%s\n", err.Error())
@@ -196,6 +199,27 @@ func (o *GolangReportOptions) Run() error {
 				if !strings.Contains(p, packageName) {
 					p = strings.Replace(p, "\"", "", -1)
 					imports[p] = ""
+				}
+			}
+		}
+
+		tomlFiles, err := fileop.FilesInPath(o.SrcPath, "(?i)/Gopkg.toml$")
+		if err != nil {
+			err := fmt.Errorf("couldn't read files in $GOPATH")
+			log.Printf("%s\n", err.Error())
+			os.Exit(1)
+		}
+		for _, f := range tomlFiles {
+			res, err := parseTomlImportsGo(f)
+			if err != nil {
+				err := fmt.Errorf("couldn't parse go imports from Gopkg.toml")
+				log.Printf("%s\n", err.Error())
+				os.Exit(1)
+			}
+			for p := range res {
+				if !strings.Contains(p, packageName) {
+					p = strings.Replace(p, "\"", "", -1)
+					imports[p] = res[p]
 				}
 			}
 		}
@@ -318,6 +342,42 @@ func parseImportsGo(file string) (map[string]int, error) {
 	// Print the imports from the file's AST.
 	for _, s := range f.Imports {
 		imports[s.Path.Value] = 1
+	}
+	return imports, nil
+}
+
+type gopkgToml struct {
+	Required   []string          `toml:"required"`
+	Constraint []gopkgConstraint `toml:"constraint"`
+}
+
+type gopkgConstraint struct {
+	Name    string
+	Version string
+	Branch  string
+}
+
+func parseTomlImportsGo(file string) (map[string]string, error) {
+	projToml, err := toml.LoadFile(file)
+	if err != nil {
+		return nil, err
+	}
+	res := gopkgToml{}
+	projToml.Unmarshal(&res)
+
+	var imports map[string]string
+	imports = make(map[string]string)
+	for _, req := range res.Required {
+		imports[req] = "1"
+	}
+	for _, cons := range res.Constraint {
+		if cons.Version != "" {
+			imports[cons.Name] = cons.Version
+		} else if cons.Branch != "" {
+			imports[cons.Name] = cons.Branch
+		} else {
+			imports[cons.Name] = "n/a"
+		}
 	}
 	return imports, nil
 }
