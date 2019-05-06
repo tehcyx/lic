@@ -32,12 +32,6 @@ func main() {
 	fmt.Println("test")
 }
 `
-
-	modPackageName = `module github.com/tehcyx/imaginary-api
-
-require (
-	github.com/tehcyx/imaginary-service
-)`
 )
 
 func TestReadImportsSuccess(t *testing.T) {
@@ -76,66 +70,5 @@ func TestReadImportsFail(t *testing.T) {
 	}
 	if len(imports) != 0 {
 		t.Errorf("file does not exist, imports should be nil")
-	}
-}
-
-func TestReadModPackageNameSuccess(t *testing.T) {
-	dname, err := ioutil.TempDir("", "")
-	defer os.Remove(dname)
-	if err != nil {
-		t.Fatalf("couldn't create temp dir")
-	}
-	fname := filepath.Join(dname, "go.mod")
-	err = ioutil.WriteFile(fname, []byte(modPackageName), 0644)
-	defer os.Remove(fname)
-	if err != nil {
-		t.Fatalf("couldn't create temp file")
-	}
-
-	packageName, err := ReadModPackageName(fname)
-	if err != nil {
-		t.Errorf("couldn't process file")
-	}
-	if packageName != "github.com/tehcyx/imaginary-api" {
-		t.Errorf("package name should be '%s', something went wrong", "github.com/tehcyx/imaginary-api")
-	}
-}
-
-func TestReadModPackageNameFailFileEmpty(t *testing.T) {
-	dname, err := ioutil.TempDir("", "")
-	defer os.Remove(dname)
-	if err != nil {
-		t.Fatalf("couldn't create temp dir")
-	}
-	fname := filepath.Join(dname, "go.mod")
-	err = ioutil.WriteFile(fname, []byte(""), 0644)
-	defer os.Remove(fname)
-	if err != nil {
-		t.Fatalf("couldn't create temp file")
-	}
-
-	packageName, err := ReadModPackageName(fname)
-	if err == nil {
-		t.Errorf("something went wrong")
-	}
-	if packageName != "" {
-		t.Errorf("there's no package name in this file")
-	}
-}
-
-func TestReadModPackageNameFailFileNotExistent(t *testing.T) {
-	dname, err := ioutil.TempDir("", "")
-	defer os.Remove(dname)
-	if err != nil {
-		t.Fatalf("couldn't create temp dir")
-	}
-	fname := filepath.Join(dname, "go.mod")
-
-	packageName, err := ReadModPackageName(fname)
-	if err == nil {
-		t.Errorf("the file does not exist, error should be there")
-	}
-	if packageName != "" {
-		t.Errorf("file does not exist, so this should be empty")
 	}
 }

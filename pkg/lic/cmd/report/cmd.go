@@ -14,6 +14,8 @@ type Options struct {
 	SrcPath        string
 	HTMLOutput     bool
 	ProjectVersion string
+	ProjectName    string
+	StdLib         bool
 }
 
 //NewReportOptions creates options with default values

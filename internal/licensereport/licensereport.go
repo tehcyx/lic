@@ -4,6 +4,8 @@ package licensereport
 type LicenseReport struct {
 	ProjectID         string
 	ProjectVersion    string
+	ProjectBranch     string
+	ProjectRevision   string
 	ProjectHash       string
 	ValidatedLicenses []LicenseResult
 	Violations        []LicenseResult
@@ -11,10 +13,13 @@ type LicenseReport struct {
 
 //LicenseResult project and the resolved license to be reflected in the scan report
 type LicenseResult struct {
-	ProjectID      string
-	ProjectVersion string
-	ProjectHash    string
-	License        License
+	ProjectID       string
+	ProjectVersion  string
+	ProjectBranch   string
+	ProjectRevision string
+	ProjectHash     string
+	ProjectURL      string
+	License         License
 }
 
 //License represents a license, e.g. Apache 2, GNU GPL v2
