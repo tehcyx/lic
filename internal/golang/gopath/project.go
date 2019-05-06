@@ -2,10 +2,12 @@ package gopath
 
 import (
 	"fmt"
+
 	"github.com/tehcyx/lic/internal/fileop"
 	"github.com/tehcyx/lic/internal/licensereport"
 )
 
+// Collect initiates collection of imports accross given path
 func Collect(proj *licensereport.Project, prjPath string) error {
 	if Exists(prjPath) {
 		return ReadImports(proj, prjPath)
@@ -13,6 +15,7 @@ func Collect(proj *licensereport.Project, prjPath string) error {
 	return fmt.Errorf("project folder does not exist")
 }
 
+// Exists checks that path exists
 func Exists(prjPath string) bool {
 	if err := fileop.Exists(prjPath); err == nil {
 		return true
