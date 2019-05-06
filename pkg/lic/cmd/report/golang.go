@@ -5,9 +5,6 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"fmt"
-	"github.com/tehcyx/lic/internal/golang/godep"
-	"github.com/tehcyx/lic/internal/golang/gomod"
-	"github.com/tehcyx/lic/internal/golang/gopath"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -18,6 +15,10 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/tehcyx/lic/internal/golang/godep"
+	"github.com/tehcyx/lic/internal/golang/gomod"
+	"github.com/tehcyx/lic/internal/golang/gopath"
 
 	"github.com/spf13/cobra"
 
@@ -89,9 +90,10 @@ func NewGolangReportCmd(o *GolangReportOptions) *cobra.Command {
 }
 
 //Run runs the command
-// Scan has to exclusive paths this could go:
-//		1) If there's a go.mod file, check for "module" line and read the packages path
-//		2) If there's no go.mod file, check $GOPATH and make assumption based on that
+// Scan has paths this could go:
+//		1) If there's a go.mod file, check go.mod file for dependencies and versions of these
+//		2) If there's at least one Gopkg.toml/Gopkg.lock file, check Gopkg.lock(s) for all dependencies and versions
+//		3) If there's no go.mod file, check $GOPATH and make assumption based on that
 func (o *GolangReportOptions) Run() error {
 	if o.SrcPath != "" {
 		if err := fileop.Exists(o.SrcPath); err != nil {
@@ -133,7 +135,7 @@ func (o *GolangReportOptions) Run() error {
 			log.Printf("Info: %s. Fallback to file parsing.", errGoDep.Error())
 		}
 	}
-	// 3) go.mod file DOES NOT EXIST
+	// 3) go.mod file or Gopkg.lock DOES NOT EXIST
 	if len(proj.Imports) == 0 {
 		errGoPath := gopath.Collect(proj, o.SrcPath)
 		if errGoPath != nil {

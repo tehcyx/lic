@@ -1,17 +1,9 @@
-package gomod
+package gopath
 
 import (
 	"testing"
 
 	"github.com/tehcyx/lic/internal/licensereport"
-)
-
-var (
-	modPackageName = `module github.com/tehcyx/imaginary-api
-
-require (
-	github.com/tehcyx/imaginary-service
-)`
 )
 
 func TestCollect(t *testing.T) {
@@ -37,7 +29,7 @@ func TestCollect(t *testing.T) {
 
 func TestExists(t *testing.T) {
 	type args struct {
-		goModPath string
+		prjPath string
 	}
 	tests := []struct {
 		name string
@@ -48,7 +40,7 @@ func TestExists(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := Exists(tt.args.goModPath); got != tt.want {
+			if got := Exists(tt.args.prjPath); got != tt.want {
 				t.Errorf("Exists() = %v, want %v", got, tt.want)
 			}
 		})

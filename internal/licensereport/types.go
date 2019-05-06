@@ -4,6 +4,7 @@ import (
 	"fmt"
 )
 
+// projImport holds version information & name, scanned from various files for an import in that file
 type projImport struct {
 	Name               string
 	Version            string
@@ -12,6 +13,7 @@ type projImport struct {
 	IsDirectDependency bool
 }
 
+// Project holds version information & name, scanned from various files
 type Project struct {
 	Name     string
 	Imports  map[string]*projImport
@@ -20,12 +22,14 @@ type Project struct {
 	Revision string
 }
 
+// NewProjectReport Creates a new project report
 func NewProjectReport() *Project {
 	return &Project{
 		Imports: map[string]*projImport{},
 	}
 }
 
+// InsertImport creates a new import entry on the project
 func (p *Project) InsertImport(name, version, branch, revision string, isDirectDependency bool) error {
 	if name == "" {
 		return fmt.Errorf("name cannot be empty")
