@@ -3,11 +3,12 @@ package gomod
 import (
 	"bufio"
 	"fmt"
-	"github.com/tehcyx/lic/internal/licensereport"
 	"log"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/tehcyx/lic/internal/report"
 )
 
 var (
@@ -24,7 +25,7 @@ var (
 )
 
 //ReadImports reads imports on a given filepath with the given regex params for start, end and line
-func ReadImports(proj *licensereport.Project, filePath string) error {
+func ReadImports(proj *report.Project, filePath string) error {
 	file, err := os.Open(filePath)
 	if err != nil {
 		msg := fmt.Errorf("Something went wrong opening the file %s", filePath)

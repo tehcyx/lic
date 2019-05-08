@@ -3,7 +3,7 @@ package gomod
 import (
 	"testing"
 
-	"github.com/tehcyx/lic/internal/licensereport"
+	"github.com/tehcyx/lic/internal/report"
 )
 
 var (
@@ -16,7 +16,7 @@ require (
 
 func TestCollect(t *testing.T) {
 	type args struct {
-		proj    *licensereport.Project
+		proj    *report.Project
 		prjPath string
 	}
 	tests := []struct {

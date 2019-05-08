@@ -1,4 +1,4 @@
-package licensereport
+package report
 
 import "testing"
 

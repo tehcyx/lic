@@ -1,17 +1,18 @@
 package gopath
 
 import (
-	"github.com/tehcyx/lic/internal/licensereport"
 	"go/parser"
 	"go/token"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/tehcyx/lic/internal/report"
 )
 
 //ReadImports reads imports on a given filepath with the given regex params for start, end and line
-func ReadImports(proj *licensereport.Project, filePath string) error {
+func ReadImports(proj *report.Project, filePath string) error {
 	imports := make(map[string]int)
 
 	err := filepath.Walk(filePath,

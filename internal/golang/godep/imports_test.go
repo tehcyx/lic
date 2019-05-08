@@ -3,12 +3,12 @@ package godep
 import (
 	"testing"
 
-	"github.com/tehcyx/lic/internal/licensereport"
+	"github.com/tehcyx/lic/internal/report"
 )
 
 func TestReadImports(t *testing.T) {
 	type args struct {
-		proj     *licensereport.Project
+		proj     *report.Project
 		filePath string
 	}
 	tests := []struct {

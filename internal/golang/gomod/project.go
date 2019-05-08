@@ -5,11 +5,11 @@ import (
 	"path"
 
 	"github.com/tehcyx/lic/internal/fileop"
-	"github.com/tehcyx/lic/internal/licensereport"
+	"github.com/tehcyx/lic/internal/report"
 )
 
 // Collect initiates collection of imports accross given path
-func Collect(proj *licensereport.Project, prjPath string) error {
+func Collect(proj *report.Project, prjPath string) error {
 	goModPath := path.Join(prjPath, "go.mod")
 	if Exists(goModPath) {
 		return ReadImports(proj, goModPath)

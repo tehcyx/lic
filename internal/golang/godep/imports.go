@@ -2,15 +2,16 @@ package godep
 
 import (
 	"fmt"
-	"github.com/pelletier/go-toml"
-	"github.com/tehcyx/lic/internal/fileop"
-	"github.com/tehcyx/lic/internal/licensereport"
 	"log"
 	"os"
+
+	"github.com/pelletier/go-toml"
+	"github.com/tehcyx/lic/internal/fileop"
+	"github.com/tehcyx/lic/internal/report"
 )
 
 //ReadImports reads imports on a given filepath with the given regex params for start, end and line
-func ReadImports(proj *licensereport.Project, filePath string) error {
+func ReadImports(proj *report.Project, filePath string) error {
 	tomlFiles, err := fileop.FilesInPath(filePath, "(?i)/Gopkg.lock$")
 	if err != nil {
 		err := fmt.Errorf("couldn't read files in $GOPATH")

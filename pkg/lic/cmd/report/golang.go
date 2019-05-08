@@ -19,11 +19,11 @@ import (
 	"github.com/tehcyx/lic/internal/golang/godep"
 	"github.com/tehcyx/lic/internal/golang/gomod"
 	"github.com/tehcyx/lic/internal/golang/gopath"
+	"github.com/tehcyx/lic/internal/report"
 
 	"github.com/spf13/cobra"
 
 	"github.com/tehcyx/lic/internal/fileop"
-	"github.com/tehcyx/lic/internal/licensereport"
 	"github.com/tehcyx/lic/pkg/lic/core"
 )
 
@@ -121,7 +121,7 @@ func (o *GolangReportOptions) Run() error {
 		o.ProjectVersion = out.String()
 	}
 
-	proj := licensereport.NewProjectReport()
+	proj := report.NewProjectReport()
 
 	// 1) go.mod file EXISTS
 	errGoMod := gomod.Collect(proj, o.SrcPath)
@@ -149,32 +149,18 @@ func (o *GolangReportOptions) Run() error {
 		os.Exit(1)
 	}
 
-	var resultReport licensereport.LicenseReport
-	if o.ProjectName != "" {
-		resultReport.ProjectID = o.ProjectName
-	} else {
-		resultReport.ProjectID = proj.Name
-	}
-	resultReport.ProjectVersion = o.ProjectVersion
-
 	h := sha256.New()
-	h.Write([]byte(resultReport.ProjectID + resultReport.ProjectVersion))
-	resultReport.ProjectHash = fmt.Sprintf("%x", (h.Sum(nil)))
+	h.Write([]byte(proj.Name + proj.Version))
+	proj.Hash = fmt.Sprintf("%x", (h.Sum(nil)))
+	proj.Version = o.ProjectVersion
 
 	for _, imp := range proj.Imports {
-		var res licensereport.LicenseResult
-		res.License = licensereport.Licenses["na"]
-		res.ProjectID = imp.Name
-		res.ProjectVersion = imp.Version
-		res.ProjectBranch = imp.Branch
-		h := sha256.New()
-		h.Write([]byte(res.ProjectID + res.ProjectVersion))
-		res.ProjectHash = fmt.Sprintf("%x", (h.Sum(nil)))
+		imp.License = report.Licenses["na"]
 
 		if _, ok := stdLibraryList[imp.Name]; ok { // only execute if library is not stdlib
 			// reference standard library in the report
-			res.ProjectVersion = "Standard Library"
-			resultReport.ValidatedLicenses = append(resultReport.ValidatedLicenses, res)
+			imp.Version = "Standard Library"
+			proj.ValidatedLicenses[imp.Name] = imp
 		} else {
 			var whitelistViolation bool
 			whitelistViolation = true
@@ -185,19 +171,23 @@ func (o *GolangReportOptions) Run() error {
 						log.Printf("not a url: %s", imp.Name)
 						continue
 					}
-					res.ProjectURL = parsedURL.String() //TODO: call url and actually validate License
-					resultReport.ValidatedLicenses = append(resultReport.ValidatedLicenses, res)
+					imp.ParsedURL = parsedURL.String() //TODO: call url and actually validate License
+					proj.ValidatedLicenses[imp.Name] = imp
 					whitelistViolation = false //TODO: collect all illegal imports
 				}
 			}
 			if whitelistViolation {
-				resultReport.Violations = append(resultReport.Violations, res)
+				proj.Violations[imp.Name] = imp
 			}
 		}
+
+		h := sha256.New()
+		h.Write([]byte(imp.Name + imp.Version))
+		imp.Hash = fmt.Sprintf("%x", (h.Sum(nil)))
 	}
 
-	printReport(resultReport)
-	if len(resultReport.Violations) > 0 {
+	proj.PrintReport()
+	if len(proj.Violations) > 0 {
 		os.Exit(1)
 	}
 
@@ -225,37 +215,4 @@ func visitURL(url string) {
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	fmt.Println(string(body))
-}
-
-func printReport(rep licensereport.LicenseReport) {
-	fmt.Printf("Report for %s %s\n", rep.ProjectID, rep.ProjectVersion)
-	fmt.Printf("Generated project hash: %s\n", rep.ProjectHash)
-	fmt.Println("")
-	numberLicenses := len(rep.ValidatedLicenses)
-	var wasWere, dependencyDependencies string
-	if len(rep.ValidatedLicenses) == 1 {
-		wasWere = "was"
-		dependencyDependencies = "dependency"
-	} else {
-		wasWere = "were"
-		dependencyDependencies = "dependencies"
-	}
-	fmt.Printf("During the scan there %s %d %s found:\n", wasWere, numberLicenses, dependencyDependencies)
-
-	for _, licen := range rep.ValidatedLicenses {
-		fmt.Printf("\tImport: %s, Version: %s\n", licen.ProjectID, licen.ProjectVersion)
-	}
-
-	var blacklistImport string
-	if len(rep.Violations) == 1 {
-		wasWere = "was"
-		blacklistImport = "blackisted import"
-	} else {
-		wasWere = "were"
-		blacklistImport = "blacklisted imports"
-	}
-	fmt.Printf("Additionally %d %s %s found:\n", len(rep.Violations), blacklistImport, wasWere)
-	for _, viol := range rep.Violations {
-		fmt.Printf("\tImport: %s, Version: %s\n", viol.ProjectID, viol.ProjectVersion)
-	}
 }
