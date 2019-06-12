@@ -5,20 +5,17 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"fmt"
-	"io/ioutil"
 	"log"
-	"net/http"
 	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"strings"
-	"time"
 
 	"github.com/tehcyx/lic/internal/golang/godep"
 	"github.com/tehcyx/lic/internal/golang/gomod"
 	"github.com/tehcyx/lic/internal/golang/gopath"
+	"github.com/tehcyx/lic/internal/license"
 	"github.com/tehcyx/lic/internal/report"
 
 	"github.com/spf13/cobra"
@@ -155,7 +152,7 @@ func (o *GolangReportOptions) Run() error {
 	proj.Version = o.ProjectVersion
 
 	for _, imp := range proj.Imports {
-		imp.License = report.Licenses["na"]
+		imp.License = license.Licenses["na"]
 
 		if _, ok := stdLibraryList[imp.Name]; ok { // only execute if library is not stdlib
 			// reference standard library in the report
@@ -172,6 +169,10 @@ func (o *GolangReportOptions) Run() error {
 						continue
 					}
 					imp.ParsedURL = parsedURL.String() //TODO: call url and actually validate License
+					err = imp.GetLicenseInfo()
+					if err != nil {
+						log.Println(err)
+					}
 					proj.ValidatedLicenses[imp.Name] = imp
 					whitelistViolation = false //TODO: collect all illegal imports
 				}
@@ -192,27 +193,4 @@ func (o *GolangReportOptions) Run() error {
 	}
 
 	return nil
-}
-
-func checkGitHubDependency(url string) (string, error) {
-	re := regexp.MustCompile("^github.com(\\/\\w+\\/\\w+).*")
-	result := re.FindStringSubmatch(url)
-	if len(result) > 1 {
-		return "http://api.github.com/repos" + result[1] + "/license", nil
-	}
-	return "", fmt.Errorf("Not a GitHub url: %s", url)
-}
-
-func visitURL(url string) {
-	var netClient = &http.Client{
-		Timeout: time.Second * 10,
-	}
-	fmt.Println("query url", url)
-	resp, err := netClient.Get(url + "/master/LICENSE")
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	fmt.Println(string(body))
 }
