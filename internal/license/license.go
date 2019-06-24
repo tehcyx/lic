@@ -68,12 +68,12 @@ func init() {
 }
 
 // Get Depending on the targets origin, query provider to retrieve license information
-func Get(name, version, branch, url string) (License, error) {
+func Get(name, version, branch, url string) License {
 	var key string
 	if strings.HasPrefix(name, "github.com") {
 		result, err := github.GetLicenseKey(name)
 		if err != nil {
-			return Licenses[licenseUnknownKey], err
+			return Licenses[licenseUnknownKey]
 		}
 		key = result
 	} else if strings.HasPrefix(name, "k8s.io") {
@@ -81,5 +81,5 @@ func Get(name, version, branch, url string) (License, error) {
 	} else {
 		key = licenseUnknownKey
 	}
-	return Licenses[key], nil
+	return Licenses[key]
 }

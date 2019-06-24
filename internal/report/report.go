@@ -43,6 +43,7 @@ func NewProjectReport() *Project {
 
 // NewImport creates a new project import
 func NewImport(name, version, branch, revision string, isDirectDependency bool) *Import {
+	// TODO: introduce error handling, name should not be possible to be set to empty, either version, branch or revision have to be set
 	return &Import{
 		Name:               name,
 		Version:            version,
@@ -98,11 +99,7 @@ func (p *Project) PrintReport() {
 	}
 }
 
-func (i *Import) GetLicenseInfo() error {
-	lic, err := license.Get(i.Name, i.Version, i.Branch, i.ParsedURL)
-	if err != nil {
-		return err
-	}
+func (i *Import) GetLicenseInfo() {
+	lic := license.Get(i.Name, i.Version, i.Branch, i.ParsedURL)
 	i.License = lic
-	return nil
 }

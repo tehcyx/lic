@@ -1,4 +1,4 @@
-// Package report implements the `lic report golang` (`lic r go`)command.
+// Package report implements the `lic report golang` (`lic r go`) command.
 package report
 
 import (

@@ -11,8 +11,12 @@ func TestNewProjectReport(t *testing.T) {
 	tests := []struct {
 		name string
 		want *Project
-	}{
-		// TODO: Add test cases.
+	}{ // This function just initialites maps
+		{"Create new report success", &Project{
+			Imports:           map[string]*Import{},
+			ValidatedLicenses: map[string]*Import{},
+			Violations:        map[string]*Import{},
+		}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -44,7 +48,10 @@ func TestProject_InsertImport(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{"Name cannot be empty", fields{"Test project", nil, "0.0.1", "master", "rev"}, args{"", "", "", "", true}, true},
+		{"Name cannot be empty", fields{"Test project", map[string]*Import{"name": NewImport("name", "", "branch", "rev", true)}, "0.0.1", "master", "rev"}, args{"name", "", "", "", true}, true},
+		{"Name cannot be empty", fields{"Test project", map[string]*Import{"name": NewImport("name", "", "branch", "rev", true)}, "0.0.1", "master", "rev"}, args{"newName", "", "", "", true}, false},
+		// import already exists [name]
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -74,8 +81,10 @@ func TestNewImport(t *testing.T) {
 		name string
 		args args
 		want *Import
-	}{
-		// TODO: Add test cases.
+	}{ // sets fields to whatever is given, can be empty, no checks applied
+		{"Set all fields", args{"name", "version", "branch", "revision", true}, &Import{Name: "name", Version: "version", Branch: "branch", Revision: "revision", IsDirectDependency: true}},
+		{"Set no fields", args{"", "", "", "", true}, &Import{IsDirectDependency: true}},
+		{"Set no fields - direct dependency false", args{"", "", "", "", false}, &Import{IsDirectDependency: false}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -102,8 +111,12 @@ func TestProject_PrintReport(t *testing.T) {
 	tests := []struct {
 		name   string
 		fields fields
-	}{
-		// TODO: Add test cases.
+	}{ // output some basic in stdout, just don't break the code
+		{"Print output successful", fields{"1", "name", "hash", "version", "branch", "revision", license.Licenses["na"], nil, nil, nil}},
+		{"Print output successful", fields{"1", "name", "hash", "version", "branch", "revision", license.Licenses["na"], map[string]*Import{"name": NewImport("name", "version", "branch", "revision", true)}, nil, nil}},
+		{"Print output successful", fields{"1", "name", "hash", "version", "branch", "revision", license.Licenses["na"], nil, map[string]*Import{"name": NewImport("name", "version", "branch", "revision", true)}, nil}},
+		{"Print output successful", fields{"1", "name", "hash", "version", "branch", "revision", license.Licenses["na"], nil, nil, map[string]*Import{"name": NewImport("name", "version", "branch", "revision", true)}}},
+		{"Print output successful", fields{"1", "name", "hash", "version", "branch", "revision", license.Licenses["na"], map[string]*Import{"name": NewImport("name", "version", "branch", "revision", true)}, map[string]*Import{"name": NewImport("name", "version", "branch", "revision", true)}, map[string]*Import{"name": NewImport("name", "version", "branch", "revision", true)}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -120,6 +133,41 @@ func TestProject_PrintReport(t *testing.T) {
 				Violations:        tt.fields.Violations,
 			}
 			p.PrintReport()
+		})
+	}
+}
+
+func TestImport_GetLicenseInfo(t *testing.T) {
+	type fields struct {
+		Name               string
+		Hash               string
+		Version            string
+		Branch             string
+		Revision           string
+		ParsedURL          string
+		IsDirectDependency bool
+		License            license.License
+	}
+	tests := []struct {
+		name   string
+		fields fields
+	}{
+		{"Get license info existing project", fields{"github.com/tehcyx/girc", "", "", "", "", "http://github.com/tehcyx/girc", true, license.Licenses["na"]}},
+		{"Get license info nonexistent project don't break it", fields{"nonexistent", "", "", "", "", "http://github.com/tehcyx/nonexistent", true, license.Licenses["na"]}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			i := &Import{
+				Name:               tt.fields.Name,
+				Hash:               tt.fields.Hash,
+				Version:            tt.fields.Version,
+				Branch:             tt.fields.Branch,
+				Revision:           tt.fields.Revision,
+				ParsedURL:          tt.fields.ParsedURL,
+				IsDirectDependency: tt.fields.IsDirectDependency,
+				License:            tt.fields.License,
+			}
+			i.GetLicenseInfo()
 		})
 	}
 }

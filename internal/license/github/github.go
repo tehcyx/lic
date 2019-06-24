@@ -41,7 +41,7 @@ func GetLicenseKey(name string) (string, error) {
 		return "", err
 	}
 
-	repo, resp, err := client.Repositories.Get(ctx, repository, owner)
+	repo, resp, err := client.Repositories.Get(ctx, repository, owner) // TODO: cleanup the error catching, this is horrible
 	if _, ok := err.(*github.RateLimitError); ok {
 		return "", fmt.Errorf("API hit rate limit")
 	}
@@ -62,15 +62,17 @@ func parseRepoOwner(name string) (string, string, error) {
 
 	match := githubParser.FindStringSubmatch(name)
 	matchResult := make(map[string]string)
-	for i, name := range githubParser.SubexpNames() {
-		if i != 0 && name != "" {
-			matchResult[name] = match[i]
+	if len(match) > 1 {
+		for i, name := range githubParser.SubexpNames() {
+			if i != 0 && name != "" {
+				matchResult[name] = match[i]
+			}
 		}
-	}
-	owner, okOwner := matchResult["owner"]
-	repo, okRepo := matchResult["repo"]
-	if okOwner && okRepo {
-		return owner, repo, nil
+		owner, okOwner := matchResult["owner"]
+		repo, okRepo := matchResult["repo"]
+		if okOwner && okRepo {
+			return owner, repo, nil
+		}
 	}
 	return "", "", fmt.Errorf("Couldn't figure out repository information")
 

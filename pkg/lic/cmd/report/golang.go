@@ -170,10 +170,8 @@ func (o *GolangReportOptions) Run() error {
 						continue
 					}
 					imp.ParsedURL = parsedURL.String() //TODO: call url and actually validate License
-					err = imp.GetLicenseInfo()
-					if err != nil {
-						log.Println(err)
-					}
+					imp.GetLicenseInfo()
+
 					proj.ValidatedLicenses[imp.Name] = imp
 					whitelistViolation = false //TODO: collect all illegal imports
 				}
