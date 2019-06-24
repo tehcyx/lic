@@ -108,6 +108,7 @@ func (o *GolangReportOptions) Run() error {
 		o.SrcPath = dir
 	}
 	if o.ProjectVersion == "n/a" {
+		// TODO: make this better, skip this if git is not found on path
 		cmd := exec.Command("git", "describe", "--tags", "--always")
 		var out bytes.Buffer
 		cmd.Stdout = &out

@@ -58,8 +58,14 @@ Global Flags:
 - Version detection
 - Server-side component that receives reports, holds history
 
+## Requirements
+
+To not run into early rate-limiting of GitHub's API, the tool requires the `LIC_GITHUB_ACCESS_TOKEN` environment variable to be set with the value of a GitHub personal access token, which can be created here: [Get a personal access token](https://github.com/settings/tokens). The token does not need to have any checkboxes applied and runs with a standard no-permission token.
+
+The `git` executable is assumed to be on the PATH, so that the tool can get the repositories tags via this command: `git describe --tags --always`. Future implementations should safeguard this by checking if the tool exists. Current implementation would probably result in an error.
+
 ## Contribute
-This tool should support multiple languages. Currently I'm working on golang. Feel free to chip in there or contribute a new language set (I'd be happy to see Java, JavaScript/Typescript). Tests are rare so far, so there's definitely more needed.
+This tool should support multiple languages. Currently I'm working on golang. Feel free to chip in or contribute a new language set (I'd be happy to see Java/JavaScript/Typescript). Tests are rare so far, so there's definitely more needed.
 
 The goal of this tool for me to get a reliable list of used software components on any sources I throw at it, to be able to check licenses against whatever licenses I want to use/don't want to use.
 
