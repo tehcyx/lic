@@ -82,7 +82,7 @@ func (p *Project) PrintReport() {
 	fmt.Printf("During the scan there %s %d %s found:\n", wasWere, numberLicenses, dependencyDependencies)
 
 	for _, licen := range p.ValidatedLicenses {
-		fmt.Printf("\tImport: %s, Version: %s\n", licen.Name, licen.Version)
+		fmt.Printf("\tImport: %s, Version: %s, License: %s (%s)\n", licen.Name, licen.Version, licen.License.Name, licen.License.ShortName)
 	}
 
 	var blacklistImport string
