@@ -85,15 +85,14 @@ func (p *Project) PrintReport() {
 		fmt.Printf("\tImport: %s, Version: %s, License: %s (%s)\n", licen.Name, licen.Version, licen.License.Name, licen.License.ShortName)
 	}
 
-	var blacklistImport string
+	var whitelistViolations string
 	if len(p.Violations) == 1 {
 		wasWere = "was"
-		blacklistImport = "blackisted import"
 	} else {
 		wasWere = "were"
-		blacklistImport = "blacklisted imports"
+		whitelistViolations = "s"
 	}
-	fmt.Printf("Additionally %d %s %s found:\n", len(p.Violations), blacklistImport, wasWere)
+	fmt.Printf("Additionally %d non-whitelist import%s %s found:\n", len(p.Violations), whitelistViolations, wasWere)
 	for _, viol := range p.Violations {
 		fmt.Printf("\tImport: %s, Version: %s\n", viol.Name, viol.Version)
 	}

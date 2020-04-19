@@ -8,3 +8,5 @@ require (
 	github.com/spf13/pflag v1.0.3 // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 )
+
+go 1.13
