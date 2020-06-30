@@ -58,7 +58,7 @@ func GetLicenseKey(name string) (string, error) {
 }
 
 func parseRepoOwner(name string) (string, string, error) {
-	githubParser := regexp.MustCompile(`github.com/(?P<owner>[^/]*)/(?P<repo>[^/]*)`)
+	githubParser := regexp.MustCompile(`github\.com/(?P<owner>[^/]*)/(?P<repo>[^/]*)`)
 
 	match := githubParser.FindStringSubmatch(name)
 	matchResult := make(map[string]string)
