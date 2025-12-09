@@ -15,8 +15,8 @@ func ReadImports(filePath, importStart, importEnd, importLine, importInline stri
 
 	file, err := os.Open(filePath)
 	if err != nil {
-		msg := fmt.Errorf("Something went wrong opening the file %s", filePath)
-		log.Printf(msg.Error())
+		msg := fmt.Errorf("something went wrong opening the file %s: %w", filePath, err)
+		log.Printf("%s", msg.Error())
 		return nil, msg
 	}
 	defer file.Close()

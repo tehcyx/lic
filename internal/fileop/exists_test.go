@@ -1,20 +1,19 @@
 package fileop
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
 )
 
 func TestExistsSuccess(t *testing.T) {
-	dname, err := ioutil.TempDir("", "")
+	dname, err := os.MkdirTemp("", "")
 	defer os.Remove(dname)
 	if err != nil {
 		t.Fatalf("couldn't create temp dir")
 	}
 	fname := filepath.Join(dname, "exists.txt")
-	err = ioutil.WriteFile(fname, []byte("Bar"), 0644)
+	err = os.WriteFile(fname, []byte("Bar"), 0644)
 	defer os.Remove(fname)
 	if err != nil {
 		t.Fatalf("couldn't create temp file")
@@ -26,7 +25,7 @@ func TestExistsSuccess(t *testing.T) {
 }
 
 func TestExistsFail(t *testing.T) {
-	dname, err := ioutil.TempDir("", "")
+	dname, err := os.MkdirTemp("", "")
 	if err != nil {
 		t.Fatalf("couldn't create temp dir")
 	}

@@ -1,22 +1,18 @@
 package core
 
 import (
-	"reflect"
 	"testing"
 )
 
 func TestNewOptions(t *testing.T) {
-	tests := []struct {
-		name string
-		want *Options
-	}{
-		// TODO: Add test cases.
+	got := NewOptions()
+
+	if got == nil {
+		t.Fatal("NewOptions() returned nil")
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := NewOptions(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewOptions() = %v, want %v", got, tt.want)
-			}
-		})
+
+	// Verify default values are set correctly
+	if got.Verbose {
+		t.Error("NewOptions() Verbose should default to false")
 	}
 }

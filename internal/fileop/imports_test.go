@@ -1,7 +1,6 @@
 package fileop
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -35,13 +34,13 @@ func main() {
 )
 
 func TestReadImportsSuccess(t *testing.T) {
-	dname, err := ioutil.TempDir("", "")
+	dname, err := os.MkdirTemp("", "")
 	defer os.Remove(dname)
 	if err != nil {
 		t.Fatalf("couldn't create temp dir")
 	}
 	fname := filepath.Join(dname, "test.go")
-	err = ioutil.WriteFile(fname, []byte(importStyleOne), 0644)
+	err = os.WriteFile(fname, []byte(importStyleOne), 0644)
 	defer os.Remove(fname)
 	if err != nil {
 		t.Fatalf("couldn't create temp file")
@@ -57,7 +56,7 @@ func TestReadImportsSuccess(t *testing.T) {
 }
 
 func TestReadImportsFail(t *testing.T) {
-	dname, err := ioutil.TempDir("", "")
+	dname, err := os.MkdirTemp("", "")
 	defer os.Remove(dname)
 	if err != nil {
 		t.Fatalf("couldn't create temp dir")

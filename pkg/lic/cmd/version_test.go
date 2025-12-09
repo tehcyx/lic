@@ -1,72 +1,51 @@
 package cmd
 
 import (
-	"reflect"
 	"testing"
 
-	"github.com/spf13/cobra"
 	"github.com/tehcyx/lic/pkg/lic/core"
 )
 
 func TestNewVersionOptions(t *testing.T) {
-	type args struct {
-		o *core.Options
+	opts := core.NewOptions()
+	got := NewVersionOptions(opts)
+
+	if got == nil {
+		t.Fatal("NewVersionOptions() returned nil")
 	}
-	tests := []struct {
-		name string
-		args args
-		want *VersionOptions
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := NewVersionOptions(tt.args.o); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewVersionOptions() = %v, want %v", got, tt.want)
-			}
-		})
+
+	if got.Options != opts {
+		t.Error("NewVersionOptions() should wrap the provided Options")
 	}
 }
 
 func TestNewVersionCmd(t *testing.T) {
-	type args struct {
-		o *VersionOptions
+	opts := NewVersionOptions(core.NewOptions())
+	got := NewVersionCmd(opts)
+
+	if got == nil {
+		t.Fatal("NewVersionCmd() returned nil")
 	}
-	tests := []struct {
-		name string
-		args args
-		want *cobra.Command
-	}{
-		// TODO: Add test cases.
+
+	if got.Use != "version" {
+		t.Errorf("NewVersionCmd() Use = %v, want 'version'", got.Use)
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := NewVersionCmd(tt.args.o); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewVersionCmd() = %v, want %v", got, tt.want)
-			}
-		})
+
+	if got.Short == "" {
+		t.Error("NewVersionCmd() Short description should not be empty")
+	}
+
+	if got.Long == "" {
+		t.Error("NewVersionCmd() Long description should not be empty")
 	}
 }
 
 func TestVersionOptions_Run(t *testing.T) {
-	type fields struct {
-		Options *core.Options
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			o := &VersionOptions{
-				Options: tt.fields.Options,
-			}
-			if err := o.Run(); (err != nil) != tt.wantErr {
-				t.Errorf("VersionOptions.Run() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
+	opts := NewVersionOptions(core.NewOptions())
+
+	// Run() should never return an error - it just prints version info
+	err := opts.Run()
+	if err != nil {
+		t.Errorf("VersionOptions.Run() unexpected error = %v", err)
 	}
 }

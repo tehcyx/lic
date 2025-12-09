@@ -3,7 +3,6 @@ package godep
 import (
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/pelletier/go-toml"
 	"github.com/tehcyx/lic/internal/fileop"
@@ -14,9 +13,7 @@ import (
 func ReadImports(proj *report.Project, filePath string) error {
 	tomlFiles, err := fileop.FilesInPath(filePath, "(?i)/Gopkg.lock$")
 	if err != nil {
-		err := fmt.Errorf("couldn't read files in $GOPATH")
-		log.Printf("%s\n", err.Error())
-		os.Exit(1)
+		return fmt.Errorf("couldn't read files in path %s: %w", filePath, err)
 	}
 	for _, f := range tomlFiles {
 		projToml, err := toml.LoadFile(f)

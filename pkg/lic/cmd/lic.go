@@ -1,18 +1,12 @@
 package cmd
 
 import (
-	"time"
-
 	"github.com/spf13/cobra"
 	"github.com/tehcyx/lic/pkg/lic/cmd/report"
 	"github.com/tehcyx/lic/pkg/lic/core"
 )
 
-const (
-	sleep = 10 * time.Second
-)
-
-//NewLicCmd creates a new kyma CLI command
+//NewLicCmd creates a new lic CLI command
 func NewLicCmd(o *core.Options) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "lic",

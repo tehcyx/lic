@@ -1,33 +1,32 @@
 package fileop
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
 )
 
 func TestFilesInPathSuccess(t *testing.T) {
-	dname, err := ioutil.TempDir("", "")
+	dname, err := os.MkdirTemp("", "")
 	defer os.Remove(dname)
 	if err != nil {
 		t.Fatalf("couldn't create temp dir")
 	}
 	fname := filepath.Join(dname, "foo.txt")
-	err = ioutil.WriteFile(fname, []byte("Bar"), 0644)
+	err = os.WriteFile(fname, []byte("Bar"), 0644)
 	defer os.Remove(fname)
 	if err != nil {
 		t.Fatalf("couldn't create temp file")
 	}
 
 	fname = filepath.Join(dname, "foo1.txt")
-	err = ioutil.WriteFile(fname, []byte("Bar"), 0644)
+	err = os.WriteFile(fname, []byte("Bar"), 0644)
 	defer os.Remove(fname)
 	if err != nil {
 		t.Fatalf("couldn't create temp file")
 	}
 	fname = filepath.Join(dname, "foo.md")
-	err = ioutil.WriteFile(fname, []byte("Bar"), 0644)
+	err = os.WriteFile(fname, []byte("Bar"), 0644)
 	defer os.Remove(fname)
 	if err != nil {
 		t.Fatalf("couldn't create temp file")
@@ -62,7 +61,7 @@ func TestFilesInPathSuccess(t *testing.T) {
 }
 
 func TestFilesInPathFail(t *testing.T) {
-	dname, err := ioutil.TempDir("", "")
+	dname, err := os.MkdirTemp("", "")
 	defer os.Remove(dname)
 	_, err = FilesInPath(dname+"notexistent", ".*\\.txt")
 	if err == nil {

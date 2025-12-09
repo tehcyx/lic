@@ -1,29 +1,28 @@
 package cmd
 
 import (
-	"reflect"
 	"testing"
 
-	"github.com/spf13/cobra"
 	"github.com/tehcyx/lic/pkg/lic/core"
 )
 
 func TestNewLicCmd(t *testing.T) {
-	type args struct {
-		o *core.Options
+	opts := core.NewOptions()
+	got := NewLicCmd(opts)
+
+	if got == nil {
+		t.Fatal("NewLicCmd() returned nil")
 	}
-	tests := []struct {
-		name string
-		args args
-		want *cobra.Command
-	}{
-		// TODO: Add test cases.
+
+	if got.Use != "lic" {
+		t.Errorf("NewLicCmd() Use = %v, want 'lic'", got.Use)
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := NewLicCmd(tt.args.o); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewLicCmd() = %v, want %v", got, tt.want)
-			}
-		})
+
+	if got.Short == "" {
+		t.Error("NewLicCmd() Short description should not be empty")
+	}
+
+	if len(got.Commands()) == 0 {
+		t.Error("NewLicCmd() should have subcommands")
 	}
 }

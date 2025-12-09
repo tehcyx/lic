@@ -2,45 +2,66 @@
 package report
 
 import (
-	"reflect"
 	"testing"
 
-	"github.com/spf13/cobra"
 	"github.com/tehcyx/lic/pkg/lic/core"
 )
 
 func TestNewReportOptions(t *testing.T) {
-	type args struct {
-		o *core.Options
+	opts := core.NewOptions()
+	got := NewReportOptions(opts)
+
+	if got == nil {
+		t.Fatal("NewReportOptions() returned nil")
 	}
-	tests := []struct {
-		name string
-		args args
-		want *Options
-	}{
-		// TODO: Add test cases.
+
+	if got.Options != opts {
+		t.Error("NewReportOptions() should wrap the provided Options")
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := NewReportOptions(tt.args.o); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewReportOptions() = %v, want %v", got, tt.want)
-			}
-		})
+
+	// Verify default values for report-specific fields
+	if got.Upload {
+		t.Error("NewReportOptions() Upload should default to false")
+	}
+
+	if got.HTMLOutput {
+		t.Error("NewReportOptions() HTMLOutput should default to false")
+	}
+
+	if got.StdLib {
+		t.Error("NewReportOptions() StdLib should default to false")
 	}
 }
 
 func TestNewReportCmd(t *testing.T) {
-	tests := []struct {
-		name string
-		want *cobra.Command
-	}{
-		// TODO: Add test cases.
+	got := NewReportCmd()
+
+	if got == nil {
+		t.Fatal("NewReportCmd() returned nil")
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := NewReportCmd(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewReportCmd() = %v, want %v", got, tt.want)
-			}
-		})
+
+	if got.Use != "report" {
+		t.Errorf("NewReportCmd() Use = %v, want 'report'", got.Use)
+	}
+
+	if got.Short == "" {
+		t.Error("NewReportCmd() Short description should not be empty")
+	}
+
+	// Verify aliases are set
+	if len(got.Aliases) == 0 {
+		t.Error("NewReportCmd() should have at least one alias")
+	}
+
+	expectedAlias := "r"
+	found := false
+	for _, alias := range got.Aliases {
+		if alias == expectedAlias {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("NewReportCmd() should have alias %q", expectedAlias)
 	}
 }

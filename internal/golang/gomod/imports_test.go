@@ -1,7 +1,6 @@
 package gomod
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -23,13 +22,13 @@ require github.com/inconshreveable/mousetrap v1.0.0 // indirect`
 )
 
 func TestReadImports(t *testing.T) {
-	dname, err := ioutil.TempDir("", "")
+	dname, err := os.MkdirTemp("", "")
 	defer os.Remove(dname)
 	if err != nil {
 		t.Fatalf("couldn't create temp dir")
 	}
 	fname := filepath.Join(dname, "go.mod")
-	err = ioutil.WriteFile(fname, []byte(modFile), 0644)
+	err = os.WriteFile(fname, []byte(modFile), 0644)
 	defer os.Remove(fname)
 	if err != nil {
 		t.Fatalf("couldn't create temp file")
