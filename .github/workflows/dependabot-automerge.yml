@@ -1,0 +1,59 @@
+# Merge Dependabot's patch updates once CI is green.
+#
+# Patch only, matching the policy already written down for Renovate in the
+# homelab repo: patch/digest/pin merge themselves, minors and majors get looked
+# at. A patch that breaks something is caught by CI; a major that breaks
+# something is caught by reading it.
+#
+# pull_request_target rather than pull_request because Dependabot's token is
+# read-only on pull_request and cannot merge. pull_request_target runs the
+# workflow from the base branch and never checks out the PR's code, so the
+# write token is not handed to anything the PR author controls — which for a
+# Dependabot PR is the dependency itself.
+#
+# The wait is explicit instead of using GitHub's auto-merge. Auto-merge only
+# holds a PR back for checks that branch protection marks *required*, and these
+# repos have no branch protection, so it would merge instantly with CI still
+# running. Watching the checks here does the waiting honestly.
+name: Dependabot auto-merge
+
+on: pull_request_target
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Read update metadata
+        id: meta
+        uses: dependabot/fetch-metadata@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Wait for checks and merge
+        if: steps.meta.outputs.update-type == 'version-update:semver-patch'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.html_url }}
+        run: |
+          set -euo pipefail
+
+          # --watch blocks until every check finishes; --fail-fast gives up as
+          # soon as one fails rather than waiting out the rest.
+          if gh pr checks "$PR" --watch --fail-fast --interval 20; then
+            echo "checks passed"
+          elif gh pr checks "$PR" 2>&1 | grep -qi 'no checks reported'; then
+            # Some of these repos run CI only on a schedule, so a PR genuinely
+            # has nothing to wait for. Merging is still right for a patch, but
+            # say so plainly rather than letting it look like checks passed.
+            echo "no checks configured on this repository; merging on the patch-only policy"
+          else
+            echo "checks did not pass; leaving this one for review"
+            exit 1
+          fi
+
+          gh pr merge --squash --delete-branch "$PR"
